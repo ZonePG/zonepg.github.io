@@ -17,6 +17,9 @@ googleAnalytics = "UA-52525161-8"
 mode = "light" # color-mode → light,dark or auto
 useCDN = false # don't use CDNs for fonts and icons, instead serve them locally.
 
+[taxonomies]
+category = "categories"
+
 # Social Tags
 
 [[params.social]]
@@ -25,11 +28,16 @@ name = "GitHub"
 url = "https://github.com/zonepg"
 
 # Main menu Items
+[[menu.main]]
+name = "All posts"
+url = "/posts"
+weight = 1
 
-# [[menu.main]]
-# name = "Home"
-# url = "/"
-# weight = 1
+[[menu.main]]
+name = "Tags"
+url = "/tags"
+weight = 2
+
 
 [markup]
   [markup.goldmark]
