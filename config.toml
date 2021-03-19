@@ -1,0 +1,37 @@
+baseURL = "http://example.org/"
+copyright = "@ ZonePG"
+languageCode = "en-us"
+title = "ZonePG"
+theme = "archie"
+
+# Code Highlight
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
+pygmentsstyle = "monokai"
+
+paginate = 3 # articles per page
+
+googleAnalytics = "UA-52525161-8"
+
+[params]
+mode = "light" # color-mode → light,dark or auto
+useCDN = false # don't use CDNs for fonts and icons, instead serve them locally.
+
+# Social Tags
+
+[[params.social]]
+icon = "github"
+name = "GitHub"
+url = "https://github.com/zonepg"
+
+# Main menu Items
+
+# [[menu.main]]
+# name = "Home"
+# url = "/"
+# weight = 1
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
