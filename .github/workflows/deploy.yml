@@ -23,7 +23,7 @@ jobs:
         run: hugo
 
       - name: Post Build
-        run: cp CNAME ./public/
+        run: cp ./public/
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
