@@ -9,4 +9,4 @@ hidden = "true"
 More about me. &nbsp;
 
 [Blog (Chinese)]({{< ref "/posts" >}} "Blog (Chinese)") &nbsp;
-[Résumé (Chinese)]({{< ref "/files/MyResume_cn.pdf" >}} "Résumé (Chinese)")
+[Résumé (Chinese)](/files/MyResume_cn.pdf)
