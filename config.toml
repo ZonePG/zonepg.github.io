@@ -14,14 +14,12 @@ paginate = 3 # articles per page
 googleAnalytics = "UA-52525161-8"
 
 [params]
+favicon="https://img.icons8.com/officel/16/000000/chevron-right.png"
+og_image="https://raw.githubusercontent.com/athul/archie/master/images/archie-dark.png"
 mode = "light" # color-mode → light,dark or auto
 useCDN = false # don't use CDNs for fonts and icons, instead serve them locally.
 
-[taxonomies]
-category = "categories"
-
 # Social Tags
-
 [[params.social]]
 icon = "github"
 name = "GitHub"
