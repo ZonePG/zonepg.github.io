@@ -26,7 +26,7 @@ url = "https://github.com/zonepg"
 [[params.social]]
 icon = "rss"
 name = "RSS"
-url = "/posts/index.xml"
+url = "https://zonepg.github.io/posts/index.xml"
 
 # Main menu Items
 [[menu.main]]
