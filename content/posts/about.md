@@ -7,6 +7,5 @@ hidden = "true"
 *Study Computer Science. Code for fun.*
 
 More about me. &nbsp;
-
 [Blog (Chinese)]({{< ref "/posts" >}} "Blog (Chinese)") &nbsp;
 [Résumé (Chinese)](/files/MyResume_cn.pdf)
