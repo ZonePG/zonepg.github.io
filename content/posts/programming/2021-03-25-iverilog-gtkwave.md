@@ -99,7 +99,16 @@ module inst_fetch (input wire clk,
     
 endmodule
 ```
-- `inst_fetch_tb.v`
+- `inst_fetch_tb.v`：注意所有的测试文件中都要加这段代码，以便iVerilog编译。
+```
+/*iverilog */
+initial
+begin            
+    $dumpfile("wave.vcd");        //生成的vcd文件名称
+    $dumpvars(0, inst_fetch_tb);    //tb模块名称
+end
+/*iverilog */
+```
 ```verilog
 module inst_fetch_tb;
 
