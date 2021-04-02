@@ -16,6 +16,7 @@ googleAnalytics = "UA-52525161-8"
 [params]
 mode = "light" # color-mode → light,dark or auto
 useCDN = false # don't use CDNs for fonts and icons, instead serve them locally.
+busuanzi = true
 
 # Social Tags
 [[params.social]]
