@@ -11,7 +11,7 @@ pygmentsstyle = "monokai"
 
 paginate = 3 # articles per page
 
-googleAnalytics = "UA-52525161-8"
+googleAnalytics = "G-0RR9DVCNMR"
 
 [params]
 mode = "light" # color-mode → light,dark or auto
