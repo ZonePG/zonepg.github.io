@@ -9,3 +9,6 @@ hidden = "true"
 More about me. &nbsp;
 [Blog (Chinese)]({{< ref "/posts" >}} "Blog (Chinese)") &nbsp;
 [Résumé (Chinese)](/files/MyResume_cn.pdf)
+
+TODO LIST
+- [ ] [TeachYourselfCS-CN](https://github.com/keithnull/TeachYourselfCS-CN/blob/master/TeachYourselfCS-CN.md)

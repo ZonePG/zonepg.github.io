@@ -21,7 +21,7 @@ tags: [Verilog, Computer Architecture]
 安装好后，可以在windows命令行中输入`iverilog`, `vvp`, `gtkwave`检查环境变量是否设置成功。
 
 ## 食用方式
-`iverilog`可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第二章 demo代码：
+`iverilog`可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第三章 demo代码：
 ```
 ├── pc_reg.v(PC寄存器实现)
 ├── rom.v(指令存储器实现)
@@ -179,6 +179,9 @@ del wave *.vcd
 
 `Insert`=>`Signals`选中信号，即可显示波形，鼠标滚轮移动波形时序位置。
 
+## 后记
+目前发现在我的机器上，verilog的数组不能开太大了，大概只能承受 4K 左右的大小，否则编译会卡住
+
 ## Reference
 - [全平台轻量开源verilog仿真工具iverilog+GTKWave使用教程](https://zhuanlan.zhihu.com/p/95081329)
-- 《自己动手写CPU》第二章
+- 《自己动手写CPU》第三章
