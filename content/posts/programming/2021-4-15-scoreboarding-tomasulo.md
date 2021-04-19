@@ -40,7 +40,7 @@ last parent finishes execution. (寄存器值通过寄存器文件传递，父�
 
 ### 算法执行步骤
 1. Issue—decode instructions & check for structural hazards
-   - Wait conditions: (1) the required FU is free; (2) no other instruction writes to the same register destination (to avoid **WAW**)
+   - No Wait conditions: (1) the required FU is free; (2) no other instruction writes to the same register destination (to avoid **WAW**)
    - Actions: (1) the instruction proceeds to the FU; (2) scoreboard updates its internal data structure
    - If an instruction is stalled at this stage, no other instructions can proceed
 2. Read operands—wait until no data hazards, then read operands
