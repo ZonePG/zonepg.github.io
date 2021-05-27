@@ -14,3 +14,5 @@ More about me. &nbsp;
 - [ ] [TeachYourselfCS-CN](https://github.com/keithnull/TeachYourselfCS-CN/blob/master/TeachYourselfCS-CN.md)
 - [ ] [The Missing Semester of Your CS Education](https://missing.csail.mit.edu/)
 
+## TODO BOOKLIST
+- [ ] 自己动手写CPU
