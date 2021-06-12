@@ -149,7 +149,7 @@ mac下的option键与普通键盘alt键不太一样，windows下 alt+c 键是 \<
 使用`ctrl-r`, `ctrl-t`, `option-c` 即可使用命令搜索、文件搜索、文件夹切换。`ctrl-n`, `ctrl-p`进行选择。
 
 {{< figure src="https://i.loli.net/2021/05/19/qOUCgYvQJ1szAl8.png" title="fzf搜索" >}}
-我的最终配置在我的 [github仓库](https://github.com/ZonePG/my-zsh-config) 中
+我的最终配置在我的 [github仓库](https://github.com/ZonePG/dotfiles/tree/main/zsh) 中
 
 
 ## Reference
