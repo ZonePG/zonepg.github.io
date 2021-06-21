@@ -12,11 +12,16 @@ More about me. &nbsp;
 
 <br/>
 
+***Project***
+- [A Basic toy-Interpreter in Python](https://github.com/ZonePG/impl-basic-toy)
+
+<br>
+
 ***Learning Plan(Course/Book)***
 - *TODO*
   - [ ] 自己动手写CPU(In Chinese)
 - *DONE*
-  - [x] [The Missing Semester of Your CS Education(In English)](https://missing.csail.mit.edu/)
+  - [x] The Missing Semester of Your CS Education([In English](https://missing.csail.mit.edu/))([In Chinese](https://missing-semester-cn.github.io/))
 
 <br/>
 
