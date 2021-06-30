@@ -29,6 +29,7 @@ tags: [Verilog, Computer Architecture, CPU]
 {{< figure src="https://i.loli.net/2021/04/13/IJyOg4CcMqLXlmk.png" title="原始的OpenMIPS五级流水线系统结构图（用于实现ori指令）" >}}
 {{< figure src="https://i.loli.net/2021/04/13/UnOLuGprvg1jCK2.png" title="为实现数据前推而对OpenMIPS结构所做的修改" >}}
 {{< figure src="https://i.loli.net/2021/04/13/CrVJicbT15NqD4h.png" title="为实现移动操作而对OpenMIPS结构所做的修改" >}}
+{{< figure src="https://i.loli.net/2021/07/01/O1nl6MKquTbIfvA.png" title="为实现流水线暂停机制而对系统结构所做的修改" >}}
 
 ### SOPC 实现
 {{< figure src="https://i.loli.net/2021/04/13/sYwiIKGdkCN9zBH.png" title="最小SOPC实现" >}}
