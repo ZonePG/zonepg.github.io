@@ -38,3 +38,5 @@ tags: [Verilog, Computer Architecture, CPU]
 {{< figure src="https://i.loli.net/2021/04/13/Zjyk9boYhcsgr6e.png" title="逻辑、移位操作与空指令" >}}
 {{< figure src="https://i.loli.net/2021/04/13/zVPDNA4UGbCXdln.png" title="移动操作指令" >}}
 {{< figure src="https://i.loli.net/2021/04/17/VJj1usxN4a5mivO.png" title="算术操作指令" >}}
+{{< figure src="https://i.loli.net/2021/04/17/VJj1usxN4a5mivO.png" title="算术操作指令" >}}
+{{< figure src="https://i.loli.net/2021/07/01/gN71Uf5typenWDX.png" title="乘累加、乘累减指令" >}}
