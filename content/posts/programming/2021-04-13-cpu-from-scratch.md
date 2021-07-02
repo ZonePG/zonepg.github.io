@@ -31,6 +31,7 @@ tags: [Verilog, Computer Architecture, CPU]
 {{< figure src="https://i.loli.net/2021/04/13/UnOLuGprvg1jCK2.png" title="为实现数据前推而对OpenMIPS结构所做的修改" >}}
 {{< figure src="https://i.loli.net/2021/04/13/CrVJicbT15NqD4h.png" title="为实现移动操作而对OpenMIPS结构所做的修改" >}}
 {{< figure src="https://i.loli.net/2021/07/01/O1nl6MKquTbIfvA.png" title="为实现流水线暂停机制而对系统结构所做的修改" >}}
+{{< figure src="https://i.loli.net/2021/07/02/x78KvfWV31bdUXN.png" title="为实现转移指令而对系统结构所做的修改" >}}
 
 ### SOPC 实现
 {{< figure src="https://i.loli.net/2021/04/13/sYwiIKGdkCN9zBH.png" title="最小SOPC实现" >}}
@@ -41,3 +42,4 @@ tags: [Verilog, Computer Architecture, CPU]
 {{< figure src="https://i.loli.net/2021/04/17/VJj1usxN4a5mivO.png" title="算术操作指令" >}}
 {{< figure src="https://i.loli.net/2021/04/17/VJj1usxN4a5mivO.png" title="算术操作指令" >}}
 {{< figure src="https://i.loli.net/2021/07/01/gN71Uf5typenWDX.png" title="乘累加、乘累减指令" >}}
+{{< figure src="https://i.loli.net/2021/07/02/yKUAsGZVuSQ5YTb.png" title="转移指令" >}}
