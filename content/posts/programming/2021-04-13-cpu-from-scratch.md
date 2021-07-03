@@ -23,8 +23,9 @@ tags: [Verilog, Computer Architecture, CPU]
 {{< figure src="https://i.loli.net/2021/04/13/Lai8EHwzjxX7ZGq.png" title="添加了数据前推的OpenMIPS数据流图（回写、译码数据相关通过判断即可解决）" >}}
 {{< figure src="https://i.loli.net/2021/04/13/ETu3b12zFl5VUMX.png" title="添加了移动操作指令后的数据流图" >}}
 {{< figure src="https://i.loli.net/2021/04/13/W9IbPADV4hCjuQo.png" title="解决HI、寄存器带来的数据相关问题后的数据流图" >}}
-{{< figure src="https://i.loli.net/2021/04/13/bUsrY8mgJ1jwuNS.png" title="实现mips32指令集中所有整数指令之后的数据流图" >}}
+{{< figure src="https://i.loli.net/2021/07/03/uve48gbQk1Lqxdf.png" title="增加算术操作后的数据流图" >}}
 {{< figure src="https://i.loli.net/2021/07/02/eRHv3xb9XCdAF1K.png" title="为实现转移指令而修改的数据流图" >}}
+{{< figure src="https://i.loli.net/2021/04/13/bUsrY8mgJ1jwuNS.png" title="实现mips32指令集中所有整数指令之后的数据流图" >}}
 
 ### 系统结构图
 {{< figure src="https://i.loli.net/2021/04/13/IJyOg4CcMqLXlmk.png" title="原始的OpenMIPS五级流水线系统结构图（用于实现ori指令）" >}}
