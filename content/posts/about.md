@@ -20,10 +20,10 @@ More about me. &nbsp;
 
 ***Learning Plan(Course/Book)***
 - *TODO*
-  - [ ] 自己动手写CPU(In Chinese)
-  - [ ] [循序渐进，学习开发一个RISC-V上的操作系统(In Chinese)](https://www.bilibili.com/video/BV1Q5411w7z5?p=1&spm_id_from=333.788.b_6d756c74695f70616765.1)
 - *DONE*
   - [x] The Missing Semester of Your CS Education([In English](https://missing.csail.mit.edu/))([In Chinese](https://missing-semester-cn.github.io/))
+  - [x] 自己动手写CPU(In Chinese)
+  - [x] [循序渐进，学习开发一个RISC-V上的操作系统(In Chinese)](https://www.bilibili.com/video/BV1Q5411w7z5?p=1&spm_id_from=333.788.b_6d756c74695f70616765.1)
 
 <br/>
 
