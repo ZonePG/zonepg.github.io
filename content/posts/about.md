@@ -20,6 +20,7 @@ More about me. &nbsp;
 
 ***Learning Plan(Course/Book)***
 - *TODO*
+  - [ ] [CS 144: Introduction to Computer Networking(In English)](https://cs144.github.io/)
 - *DONE*
   - [x] The Missing Semester of Your CS Education([In English](https://missing.csail.mit.edu/))([In Chinese](https://missing-semester-cn.github.io/))
   - [x] 自己动手写CPU(In Chinese)
