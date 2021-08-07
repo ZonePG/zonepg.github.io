@@ -14,7 +14,7 @@ More about me. &nbsp;
 
 ***Project***
 - [A Basic toy-Interpreter in Python](https://github.com/ZonePG/impl-basic-toy)
-- [A simple RISC-V OS](https://github.com/ZonePG/HelloRVOS)
+- [A Text Classify Web in Python](https://github.com/ZonePG/TextClassify)
 
 <br>
 
