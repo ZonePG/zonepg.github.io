@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on ZonePG</title>
+    <link>https://zonepg.github.io/posts/</link>
+    <description>Recent content in Posts on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Sun, 29 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CMU 15-445/645 PROJECT #3 - Query Execution</title>
+      <link>https://zonepg.github.io/posts/programming/2021-08-29-cmu-15-445-db-project3/</link>
+      <pubDate>Sun, 29 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-08-29-cmu-15-445-db-project3/</guid>
+      <description>这一部分实现是使用课堂所讲的Volcano model，支持qeury execution。每个qeury plan都实现了一个Next方法，通过该方法来检索操作tuple。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+TASK #1 - SYSTEM CATALOG 这一部分是实现System catalog的一些接口。
+ CreateTable(Transaction *txn, const std::string &amp;amp;table_name, const Schema &amp;amp;schema): 更新names_, tables_字段。 GetTable(const std::string &amp;amp;table_name), GetTable(table_oid_t table_oid): 通过相应参数获取表。 CreateIndex(txn, index_name, table_name, schema, key_schema key_attrs, keysize): 根据表建立索引，更新index_names_, indexes_字段。 GetIndex(const std::string &amp;amp;index_name, const std::string &amp;amp;table_name), GetIndex(index_oid_t index_oid): 通过参数获取索引。 GetTableIndexes(const std::string &amp;amp;table_name): 获取表的所有索引信息。  TASK #2 - EXECUTORS 这一部分实现excutor，包括sequential scans, index scans, inserts, updates, deletes, nested loop joins, nested index joins, limits with offset, aggregations。</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #2 - B&#43;TREE</title>
+      <link>https://zonepg.github.io/posts/programming/2021-08-12-cmu-15-445-db-project2/</link>
+      <pubDate>Wed, 18 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-08-12-cmu-15-445-db-project2/</guid>
+      <description>这一部分前前后后做了两周，到目前为止仍然有个并发的 bug 没有解决，没有拿到满分，准备先去去完成后面的内容回来再来看看。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+Checkpoint 1 TASK #1 - B+TREE PAGES 这一部分大都是补全Get, Set函数即可。
+需要注意的是，其中 GetSize() 就是 k-v 对数，根据 ppt 来看，对于一个page来说，能装的最多有效k-v 对数也就是 max_size - 1对。
+ 对于 internal_page 来说，第一个 key 也就是 array[0].first 是非法的 key，但是它的 value 是有效的，在计算 size 时我们仍然给它算作一对 k-v，它的 value 也就是 array[0].second 就是它孩子的page_id 对于 leaf_page 来说，真正的 value 直接保存在 array[0].second 中，所以第一个 key(array[0]) 是有效的。  对于 GetMinSize() 也需要注意如下几点。
+ 如果当前结点是根结点  如果根结点是叶子结点，那么它的 min_size 就是 1，表示没有有效的 key。 如果根结点是internal page，那么它的 min_size 就是 2，需要至少一个有效的 key 来 route 到叶子结点。   如果不是根结点  是 inernal_page，那么 min_size 是 (max_size + 1) / 2 是 leaf_page，那么 min_size 是 max_size / 2    以 max_size = 3 为例子，那么 leaf_page 的 min_size 就是 1，internal_page 的 min_size 就是2</description>
+    </item>
+    
+    <item>
+      <title>tmux 常用命令</title>
+      <link>https://zonepg.github.io/posts/programming/2021-08-11-tmux-use/</link>
+      <pubDate>Wed, 11 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-08-11-tmux-use/</guid>
+      <description>记录一下 tmux 常用命令。
+我使用的是 oh my tmux 的默认配置。
+ctrl+b+?可以查看一些命令帮助。
+会话(session)管理  新建会话：tmux new -s &amp;lt;session-name&amp;gt; 退出会话（会话仍然后台运行）：ctrl+b+d 列出会话：tmux ls 连接会话：tmux attach -t &amp;lt;session-name&amp;gt; 杀死会话：tmux kill-session -t &amp;lt;session-name&amp;gt; 切换会话：ctrl+b+s, ctrl+b+w 重新命名当前会话：ctrl+b+$  窗口(window)管理  新建窗口：ctrl+b+c 切换窗口：ctrl+b+&amp;lt;window-num&amp;gt;, ctrl+b+h/l 退出当前窗口：ctrl+b+&amp;amp; exit 重新命名当前窗口：ctrl+b+,  窗格(pane)管理  划分上下窗格：ctrl+b+- 划分左右窗格：ctrl+b+_ 移动窗格：ctrl+b+ h/j/k/l 当前窗格与上一个窗格交换位置：ctrl+b+{ 当前窗格与下一个窗格交换位置：ctrl+b+} 关闭当前窗格：ctrl+b+x 当前窗格独立显示：ctrl+b+z  </description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #1 - Buffer Pool</title>
+      <link>https://zonepg.github.io/posts/programming/2021-08-06-cmu-15-445-db-project1/</link>
+      <pubDate>Fri, 06 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-08-06-cmu-15-445-db-project1/</guid>
+      <description>记录一下完成 Project #1 的主要思路及踩过的坑。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+LRU Replacement Policy 做过leetcode-146. LRU 缓存机制，可以直接用 hash_map 与 双链表实现，保证操作 O(1) 时间复杂度。 不过这里这里我们可以借用标准库 std::unorder_map, std::list 实现即可。
+Victim, Pin, Unpin操作，直接面向测试用例编程，上传 gradescope 一遍过。
+需要注意的是，LRU存放的都是 Unpin 的 frame_id，同时 Unpin 并不会更新 frame_id 在 LRU 中的位置，
+LRU 供 Buffer Pool 调用，当 Buffer Pool 的 free_list_ 为空时，LRU Vicitm 驱除出来一个 frame_id，这样就可以写入 page 了。
+Pin 直接将 frame_id 从 LRU 删除，说明有线程正在使用 frame_id 上的 page，直接将 frame_id 删除可以保证不会获取到 frame_id 上的 page，这样也就无法对该 page 进行操作了，达到了 Pin 的目的。
+Buffer Pool 首先对 Buffer Pool 中的一些成员进行解释。</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #0 - C&#43;&#43; PRIMER</title>
+      <link>https://zonepg.github.io/posts/programming/2021-08-04-cmu-15-445-db-project0/</link>
+      <pubDate>Wed, 04 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-08-04-cmu-15-445-db-project0/</guid>
+      <description>记录一下完成 Project #0 的主要思路。
+这部分实验目的是熟悉 c++11 内容。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+环境搭建 按着 bustub README.md文档来就好。
+Matrix  为 linear 分配内存，记得初始化赋值为 0。 析构函数函数释放内存。  RowMatrix  为 data_ 分配 T* 数组，将 linear 指针值直接赋值给 data_[i]指针，这样可以共享内存。 也可以为data_[i]分配内存，相应赋值，但是这样就不是共享内存了。 共享内存的话，析构函数只需要释放 data_ 就可以了，父类会自动析构；创建新内存的话，先要释放data_[i]的内存。  RowMatrixOperations  判断运算矩阵纬度是否相等  </description>
+    </item>
+    
+    <item>
+      <title>Debugging with LLDB</title>
+      <link>https://zonepg.github.io/posts/programming/2021-08-03-lldb-use/</link>
+      <pubDate>Mon, 02 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-08-03-lldb-use/</guid>
+      <description>记录 lldb 常用命令
+断点 b main breakpoint delete/disable/enable b xxx.cpp : 47 r # 开始执行 c # stop 到 下一个断点 栈帧 bt # 展示栈帧 f 0 # 切换到0号栈帧 f # 定位到当前正在执行的程序段 fr v # 列出当前栈帧/函数内所有变量 l 47 # 查看行数代码 查看变量 p a # 查看变量 a w s v xxx # watch 变量xxx，若有改变，continue 时 stop w s v -w read xxx # read 时也stop Reference  LLDB Tutorial LLDB 简易指南 Debugging C/C++ with LLDB Tutorial  </description>
+    </item>
+    
+    <item>
+      <title>解决 M1 MAC 的 Qemu 使用问题</title>
+      <link>https://zonepg.github.io/posts/programming/2021-06-29-m1-mac-qemu/</link>
+      <pubDate>Tue, 29 Jun 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-06-29-m1-mac-qemu/</guid>
+      <description>本文可以帮助在M1 MAC上搭建起riscv32-system-qemu或riscv64-system-qemu的环境，不过仅适用与5.1.0版本的Qemu。
+问题重现 M1 Mac拿到手几个月内，因为一些软件的架构适配问题，十分头疼，其中包括Qemu的使用问题。
+例如我在Github MIT 的 xv6 仓库提的一个issue， 当使用5.x.0以及6.0.0版本的Qemu会出现这样的情况：qemu-system-riscv64: qemu_mprotect__osdep: mprotect failed: Permission denied， 其原因可能是苹果的内存保护问题。
+也尝试了rCore-Tutorial-Book-v3仓库的解决方案(issue)， 使用最新的补丁版本Qemu仓库，并对util/osdep.c文件作修改，虽然没有出现上面了情况了，系统启动会卡住。 以及 Qemu-5.2.0 不支持 RustSBI。
+解决方案 google 了多方资料，最终发现了一个暂时可行的解决方案，如下方式可以在 M1 Mac上跑起来 Qemu。
+ 下载 5.1.0 版本的 Qemu（6.0.0 打补丁后仍有问题） 下载这个补丁patch(series)，将其存放于Qemu的上级目录，patch -p1 &amp;lt; ../patch/v2-tcg-Fix-execution-on-Apple-Silicon.patch安装补丁。 修改util/osdep.c文件的函数  int qemu_mprotect_none(void *addr, size_t size) { #ifdef _WIN32  return qemu_mprotect__osdep(addr, size, PAGE_NOACCESS); #elif defined(__APPLE__) &amp;amp;&amp;amp; defined(__arm64__)  /* Workaround mprotect (RWX-&amp;gt;NONE) issue on Big Sur 11.2 */ return 0; #else  return qemu_mprotect__osdep(addr, size, PROT_NONE);  最后安装编译安装Qeme，并将build文件夹与build/riscv64-softmmu文件夹加入环境变量中  mkdir build &amp;amp;&amp;amp; cd build .</description>
+    </item>
+    
+    <item>
+      <title>轻量、快速的zsh</title>
+      <link>https://zonepg.github.io/posts/programming/2021-05-19-zsh-config/</link>
+      <pubDate>Wed, 19 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-05-19-zsh-config/</guid>
+      <description>之前有过在 ubuntu 折腾 zsh 的经历，使用 oh-my-zsh，这种比较笨重的框架用起来有点卡卡的，遂明确自己的需求，自己动手找了解决方案。
+自己的需求是一个轻量、快速、美观的 shell，功能包括以下：
+ 支持 vim 配色优雅、好看 展示 git 分支信息 补全、提示 搜索  将 zsh 稍加配置，最终效果如下：
+ 最终效果图   vim 支持 在 .zshrc 中加入以下配置，可以让你的 zsh 支持vim，这里同时使光标在不同编辑模式下显示不用效果，以及 tab 切换补全。
+# Basic auto/tab complete: autoload -U compinit zstyle &amp;#39;:completion:*&amp;#39; menu select zmodload zsh/complist compinit _comp_options+=(globdots)	# Include hidden files. # vi mode bindkey -v export KEYTIMEOUT=1 # Use vim keys in tab complete menu: bindkey -M menuselect &amp;#39;h&amp;#39; vi-backward-char bindkey -M menuselect &amp;#39;k&amp;#39; vi-up-line-or-history bindkey -M menuselect &amp;#39;l&amp;#39; vi-forward-char bindkey -M menuselect &amp;#39;j&amp;#39; vi-down-line-or-history # Change cursor shape for different vi modes.</description>
+    </item>
+    
+    <item>
+      <title>chcore 环境搭建(WSL2)</title>
+      <link>https://zonepg.github.io/posts/programming/2021-04-20-chcore-setup/</link>
+      <pubDate>Mon, 19 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-04-20-chcore-setup/</guid>
+      <description>课程主页实验资料的虚拟机镜像打不开，无法下载，故选择自己用 WSL2 Ubuntu20.04(当然虚拟机的Ubuntu20.04或者直接系统，应该也没问题) 搭建 x86 运行的 ARM 环境。(由于网络环境限制，部分过程需要科学上网)
+WSL2 下载 Docker curl -fsSL https://get.docker.com -o get-docker.sh sudo sh get-docker.sh sudo service docker start # 启动 docker, 关闭 docker 为 stop 安装交叉编译工具链 chcore的交叉编译工具链已经用 docker 封装好了，我们只需要下载镜像即可
+sudo docker pull ipads/chcore_builder:v1.0 Qemu 模拟器安装 我的使用的是 Qemu 5.0.0 版本，首先安装依赖包，并手动编译
+sudo apt install autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev \  gawk build-essential bison flex texinfo gperf libtool patchutils bc \  zlib1g-dev libexpat-dev pkg-config libglib2.</description>
+    </item>
+    
+    <item>
+      <title>ScoreBoard and Tomasulo Alogorithm</title>
+      <link>https://zonepg.github.io/posts/programming/2021-04-15-scoreboarding-tomasulo/</link>
+      <pubDate>Thu, 15 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-04-15-scoreboarding-tomasulo/</guid>
+      <description>ScoreBoard 和 Tomasulo 算法是体系结构中 指令级并行(ILP: Instruction Level Parallelism) 内容必磕的两个算法。
+ScoreBoard Algorithm  记分板体系结构   首先让我们看一看 ScoreBoard 的三个部件：
+ Instruction status: which of 4 steps the instruction is in  Instruction status    Functional unit status: Indicates the state of the functional unit (FU). 9 fields for each functional unit  Busy—Indicates whether the unit is busy or not Op—Operation to perform in the unit (e.g., + or –) Fi—Destination register Fj, Fk—Source-register numbers Qj, Qk—Functional units producing source registers Fj, Fk (理解为 Fj，Fk 在 Register result status 中的 functional unit，即某个 functional unit 占用 Fj 或者 Fk) Rj, Rk—Flags indicating when Fj, Fk are ready  Functional unit status      Register result status—Indicates which functional unit will write each register, if one exists.</description>
+    </item>
+    
+    <item>
+      <title>OpenMIPS处理器</title>
+      <link>https://zonepg.github.io/posts/programming/2021-04-13-cpu-from-scratch/</link>
+      <pubDate>Tue, 13 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-04-13-cpu-from-scratch/</guid>
+      <description>最近在看《自己动手写CPU》，实现一个 5级流水线的 OpenMIPS处理器。这篇文章记录保存实现过程中用到的元器件接口以及系统结构结构图，主要为图片内容，方便查阅。
+教学版OpenMIPS处理器蓝图 外部接口  教学版OpenMIPS处理器的外部接口   文件说明  流水线各个阶段对应的模块、文件   数据相关  逻辑、移位指令的数据相关    HI、LO寄存器带来的数据相关   数据流图  只实现一条指令的ori时的数据流图    添加了数据前推的OpenMIPS数据流图（回写、译码数据相关通过判断即可解决）    添加了移动操作指令后的数据流图    解决HI、寄存器带来的数据相关问题后的数据流图    增加算术操作后的数据流图    为实现转移指令而修改的数据流图    实现mips32指令集中所有整数指令之后的数据流图   系统结构图  原始的OpenMIPS五级流水线系统结构图（用于实现ori指令）    为实现数据前推而对OpenMIPS结构所做的修改    为实现移动操作而对OpenMIPS结构所做的修改    为实现流水线暂停机制而对系统结构所做的修改    为实现转移指令而对系统结构所做的修改   SOPC 实现  最小SOPC实现   确定指令种类  逻辑、移位操作与空指令    移动操作指令    算术操作指令    算术操作指令    乘累加、乘累减指令    转移指令   </description>
+    </item>
+    
+    <item>
+      <title>轻量级Verilog仿真环境搭建iVerilog&#43;GTKWave</title>
+      <link>https://zonepg.github.io/posts/programming/2021-03-25-iverilog-gtkwave/</link>
+      <pubDate>Thu, 25 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-03-25-iverilog-gtkwave/</guid>
+      <description>由于体系结构课程要用到verilog来实现MIPSCPU，之前上组成原理课程与数字逻辑课程用过ModelSim与Vivado，这两软件实在是太笨重了，同学们基本都是只拿来做做仿真运行就行了，ModelSim软件bug巨多，而Vivado编译运行速度实在是一言难尽。所以在网上找了一些轻量级Verilog仿真运行方案，Icarus Verilog + GTKWave似乎是一个不错的选择
+iVerilog开源、支持各平台，有语法检查，仿真，可以满足课程需求。
+这里给出Windows环境搭建，并给出我个人的食用方案。
+iVerilog 安装 iverlog，我个人下载的是iverilog-v11-20201123-x64_setup.exe [18.1MB]即可（不知道为什么2021版的突然突然44M，不过比 Vivado 10个G总舒服多了)。一路点下去，记得选中设置环境变量。
+将会安装好以下 3 个工具：
+ iverlog：编译 verilog代码 vvp：将可执行文件生成仿真波形 gtkwave：打开仿真波形文件，显示波形  安装好后，可以在windows命令行中输入iverilog, vvp, gtkwave检查环境变量是否设置成功。
+食用方式 iverilog可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第三章 demo代码：
+├── pc_reg.v(PC寄存器实现) ├── rom.v(指令存储器实现) ├── rom.data(指令存储器数据) ├── inst_fetch.v(综合模块实现) ├── inst_fetch_tb.v(测试模块实现) ├── run.bat(编译运行脚本) ├── rmfile.bat(删除输出文件脚本)  pc_reg.v  module pc_reg(input wire clk, input wire rst, output reg[5:0] pc, output reg ce); // 指令存储器使能信号  always @(posedge clk) begin if (rst == 1&amp;#39;b1) begin ce &amp;lt;= 1&amp;#39;b0; // 在复位信号有效的时候，指令存储器使能信号无效  end else begin ce &amp;lt;= 1&amp;#39;b1; // 复位信号无效的时候，指令存储器使能信号有效  end end always @(posedge clk) begin if (ce == 1&amp;#39;b0) begin pc &amp;lt;= 6&amp;#39;h00; // 指令存储器使能信号有效时，pc保持为0  end else begin pc &amp;lt;= pc + 1&amp;#39;b1; end end endmodule  rom.</description>
+    </item>
+    
+    <item>
+      <title>About Me</title>
+      <link>https://zonepg.github.io/posts/about/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/about/</guid>
+      <description>Study Computer Science. Code for fun.
+More about me. Blog (Chinese) Résumé (Chinese)
+ Project
+ A Basic toy-Interpreter in Python A Text Classify Web in Python  Learning Plan(Course/Book)
+ TODO  CS 144: Introduction to Computer Networking(In English)   DONE  The Missing Semester of Your CS Education(In English)(In Chinese) 《自己动手写CPU》(In Chinese) 循序渐进，学习开发一个RISC-V上的操作系统(In Chinese) 《网络是怎样连接的》-[日]户根勤(In Chinese) The Rust Programming Language(In English) CMU 15-445/645: Database Systems     Some Insightful/Interesting Articles and Videos</description>
+    </item>
+    
+    <item>
+      <title>博客迁移</title>
+      <link>https://zonepg.github.io/posts/programming/2021-03-19-blog-move/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-03-19-blog-move/</guid>
+      <description>使用Hugo重新构建了博客，一些配置文件漏了或者多加不该加的属性会导致调试很久，下面指出可能导致bug的文件.
+list  config.toml，不要加不该有的属性，这个导致tags调试了很久，出现莫名奇妙的结果。 themes/archie中只改动了layouts/_default/list.html(posts多文件设置)以及static/css/main.css(主页居中) layouts/index.html 显示自定义主页 posts/about.md  关于为什么要写博客 维护一个高质量博客可以带来很多益处， 读到为什么我要写博客——Jiayuan Thoughts，其中有几点十分受用：
+ 让自己进行有价值的思考 分享知识，走出”只可意会，不可言传“ 思考难免有错误，接受批评 一份优秀的简历  上面Jiayuan的链接对怎么去写高质量博客，讲的方法也非常不错。总之，希望自己能持之以恒地去维护一个高质量博客。</description>
+    </item>
+    
+  </channel>
+</rss>

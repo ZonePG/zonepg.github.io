@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>debug on ZonePG</title>
+    <link>https://zonepg.github.io/tags/debug/</link>
+    <description>Recent content in debug on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Mon, 02 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/debug/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Debugging with LLDB</title>
+      <link>https://zonepg.github.io/posts/programming/2021-08-03-lldb-use/</link>
+      <pubDate>Mon, 02 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/2021-08-03-lldb-use/</guid>
+      <description>记录 lldb 常用命令
+断点 b main breakpoint delete/disable/enable b xxx.cpp : 47 r # 开始执行 c # stop 到 下一个断点 栈帧 bt # 展示栈帧 f 0 # 切换到0号栈帧 f # 定位到当前正在执行的程序段 fr v # 列出当前栈帧/函数内所有变量 l 47 # 查看行数代码 查看变量 p a # 查看变量 a w s v xxx # watch 变量xxx，若有改变，continue 时 stop w s v -w read xxx # read 时也stop Reference  LLDB Tutorial LLDB 简易指南 Debugging C/C++ with LLDB Tutorial  </description>
+    </item>
+    
+  </channel>
+</rss>
