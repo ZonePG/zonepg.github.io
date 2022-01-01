@@ -8,6 +8,7 @@ hidden = "true"
 
 More about me. &nbsp;
 [Blog (Chinese)]({{< ref "/posts" >}} "Blog (Chinese)") &nbsp;
+[CS-Notes (Chinese)](https://github.com/ZonePG/cs-notes) &nbsp;
 [Résumé (Chinese)](/files/MyResume_cn.pdf)
 
 <br/>
