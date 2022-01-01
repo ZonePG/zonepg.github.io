@@ -8,11 +8,11 @@ tags: [Computer Architecture]
 
 ## ScoreBoard Algorithm
 
-{{< figure src="https://i.loli.net/2021/04/16/c2Wvr65hLTEbJKP.png" title="记分板体系结构" >}}
+{{< figure src="/ca/2021-04-15-scoreboarding-tomasulo/2021-04-15-scoreboarding-tomasulo-1.png" title="记分板体系结构" >}}
 
 首先让我们看一看 ScoreBoard 的三个部件：
 - **Instruction status**: which of 4 steps the instruction is in
-{{< figure src="https://i.loli.net/2021/04/15/yuB9MU4eQPNE6Yo.png" title="Instruction status" >}}
+{{< figure src="/ca/2021-04-15-scoreboarding-tomasulo/2021-04-15-scoreboarding-tomasulo-2.png" title="Instruction status" >}}
 - **Functional unit status**: Indicates the state of the **functional unit (FU)**. 9 fields for each functional unit
   - **Busy**—Indicates whether the unit is busy or not
   - **Op**—Operation to perform in the unit (e.g., + or –)
@@ -20,9 +20,9 @@ tags: [Computer Architecture]
   - **Fj, Fk**—Source-register numbers
   - **Qj, Qk**—Functional units producing source registers Fj, Fk (理解为 Fj，Fk 在 `Register result status` 中的 `functional unit`，即某个 `functional unit` 占用 Fj 或者 Fk)
   - **Rj, Rk**—Flags indicating when Fj, Fk are ready
-{{< figure src="https://i.loli.net/2021/04/15/KXQsaWxGp814zk9.png" title="Functional unit status" >}}
+{{< figure src="/ca/2021-04-15-scoreboarding-tomasulo/2021-04-15-scoreboarding-tomasulo-3.png" title="Functional unit status" >}}
 - **Register result status**—Indicates which functional unit will write each register, if one exists. Blank when no pending instructions will write that register
-{{< figure src="https://i.loli.net/2021/04/15/5WEXl1F96ur4yCn.png" title="Instruction status" >}}
+{{< figure src="/ca/2021-04-15-scoreboarding-tomasulo/2021-04-15-scoreboarding-tomasulo-4.png" title="Register result status" >}}
 
 看过ScoreBoard 的部件设计图后，我们来了解一下它的设计思想：
 
@@ -61,7 +61,7 @@ last parent finishes execution. (寄存器值通过寄存器文件传递，父�
 
 ## Tomasulo Algorithm
 
-{{< figure src="https://i.loli.net/2021/04/16/QIFC2kDuSptf8Nz.png" title="Tomasulo架构图" >}}
+{{< figure src="/ca/2021-04-15-scoreboarding-tomasulo/2021-04-15-scoreboarding-tomasulo-5.png" title="Tomasulo架构图" >}}
 
 Tomasulo 算法是 ScoreBoard算法的改进
 

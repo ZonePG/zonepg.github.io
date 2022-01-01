@@ -15,7 +15,7 @@ tags: [shell]
 
 将 zsh 稍加配置，最终效果如下：
 
-{{< figure src="https://i.loli.net/2021/05/19/oj8ZBkNPWSwUn9f.png" title="最终效果图" >}}
+{{< figure src="/tools/2021-05-19-zsh-config/zsh-config-demo.png" title="最终效果图" >}}
 
 ## vim 支持
 在 `.zshrc` 中加入以下配置，可以让你的 zsh 支持vim，这里同时使光标在不同编辑模式下显示不用效果，以及 tab 切换补全。
@@ -148,7 +148,7 @@ mac下的option键与普通键盘alt键不太一样，windows下 alt+c 键是 \<
 ```
 使用`ctrl-r`, `ctrl-t`, `option-c` 即可使用命令搜索、文件搜索、文件夹切换。`ctrl-n`, `ctrl-p`进行选择。
 
-{{< figure src="https://i.loli.net/2021/05/19/qOUCgYvQJ1szAl8.png" title="fzf搜索" >}}
+{{< figure src="/tools/2021-05-19-zsh-config/zsh-config-fzf-search.png" title="fzf搜索" >}}
 我的最终配置在我的 [github仓库](https://github.com/ZonePG/dotfiles/tree/main/zsh) 中
 
 

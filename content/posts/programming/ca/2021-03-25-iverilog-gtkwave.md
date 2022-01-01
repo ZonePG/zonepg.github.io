@@ -175,7 +175,7 @@ del wave *.vcd
 ### 编译运行仿真
 命令行输入`.\run.bat file1 file2`即可，这里是`.\run.bat .\inst_fetch_tb.v .\inst_fetch.v .\pc_reg.v .\rom.v `
 
-{{< figure src="https://i.loli.net/2021/03/25/wxJjlt48QAvzBYO.png" title="运行结果" >}}
+{{< figure src="/ca/2021-03-05-iverilog-gtkwave/iverilog-gtkwave.png" title="运行结果" >}}
 
 `Insert`=>`Signals`选中信号，即可显示波形，鼠标滚轮移动波形时序位置。
 
