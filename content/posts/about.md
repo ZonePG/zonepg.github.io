@@ -20,7 +20,6 @@ More about me. &nbsp;
 
 ***Learning Plan(Course/Book)***
 - *TODO*
-  - [ ] [CS 144: Introduction to Computer Networking(In English)](https://cs144.github.io/)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)
 - *DONE*
@@ -30,6 +29,7 @@ More about me. &nbsp;
   - [x] [The Rust Programming Language(In English)](https://doc.rust-lang.org/book/title-page.html)
   - [x] [CMU 15-445/645: Database Systems](https://15445.courses.cs.cmu.edu/fall2019/schedule.html)
   - [x] [CMU 15-213: Introduction to Computer Systems(In English)](https://www.cs.cmu.edu/~213/)
+  - [x] [CS 144: Introduction to Computer Networking(In English)](https://cs144.github.io/)
 
 <br/>
 
