@@ -21,6 +21,7 @@ More about me. &nbsp;
 
 ***Learning Plan(Course/Book)***
 - *TODO*
+  - [ ] [CS 61A: Structure and Interpretation of Computer Programs](https://inst.eecs.berkeley.edu/~cs61a/fa20/)
   - [ ] [CS 61B: Data Structures(In English)](https://sp21.datastructur.es/)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)
