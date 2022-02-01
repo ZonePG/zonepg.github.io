@@ -42,4 +42,4 @@ More about me. &nbsp;
 - *Articles*
   - [TeachYourselfCS-CN(In Chinese)](https://github.com/keithnull/TeachYourselfCS-CN/blob/master/TeachYourselfCS-CN.md)
   - [上海交通大学生存手册(In Chinese)](https://survivesjtu.gitbook.io/survivesjtumanual/)
-
+  - [CS 自学指南(In Chinese)](https://csdiy.wiki/)
