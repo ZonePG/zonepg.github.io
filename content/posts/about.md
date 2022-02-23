@@ -21,18 +21,18 @@ More about me. &nbsp;
 
 ***Learning Plan(Course/Book)***
 - *TODO*
-  - [ ] [CS 61A: Structure and Interpretation of Computer Programs](https://inst.eecs.berkeley.edu/~cs61a/fa20/)
   - [ ] [CS 61B: Data Structures(In English)](https://sp21.datastructur.es/)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)
 - *DONE*
   - [x] The Missing Semester of Your CS Education([In English](https://missing.csail.mit.edu/))([In Chinese](https://missing-semester-cn.github.io/))
+  - [x] [CS 61A: Structure and Interpretation of Computer Programs](https://github.com/ZonePG/CS61A)
+  - [x] [CMU 15-213: Introduction to Computer Systems(In English)](https://www.cs.cmu.edu/~213/)
+  - [x] [CMU 15-445/645: Database Systems](https://15445.courses.cs.cmu.edu/fall2019/schedule.html)
+  - [x] [CS 144: Introduction to Computer Networking(In English)](https://cs144.github.io/)
   - [x] 《自己动手写CPU》(In Chinese)
   - [x] [循序渐进，学习开发一个RISC-V上的操作系统(In Chinese)](https://www.bilibili.com/video/BV1Q5411w7z5?p=1&spm_id_from=333.788.b_6d756c74695f70616765.1)
   - [x] [The Rust Programming Language(In English)](https://doc.rust-lang.org/book/title-page.html)
-  - [x] [CMU 15-445/645: Database Systems](https://15445.courses.cs.cmu.edu/fall2019/schedule.html)
-  - [x] [CMU 15-213: Introduction to Computer Systems(In English)](https://www.cs.cmu.edu/~213/)
-  - [x] [CS 144: Introduction to Computer Networking(In English)](https://cs144.github.io/)
 
 <br/>
 
