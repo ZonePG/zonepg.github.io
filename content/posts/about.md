@@ -21,13 +21,15 @@ More about me. &nbsp;
 
 ***Learning Plan(Course/Book)***
 - *TODO*
-  - [ ] [CS 61C: Great Ideas in Computer Architecture (Machine Structures) (In English)](https://inst.eecs.berkeley.edu/~cs61c/su20/)
+  - [ ] [MIT6.S081: Operating System Engineering (In English)](https://pdos.csail.mit.edu/6.S081/2020/schedule.html)
+  - [ ] [CS 162: Operating Systems and System Programming (In English)](https://inst.eecs.berkeley.edu/~cs162/fa20/)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)
 - *DONE*
   - [x] The Missing Semester of Your CS Education([In English](https://missing.csail.mit.edu/))([In Chinese](https://missing-semester-cn.github.io/))
   - [x] [CS 61A: Structure and Interpretation of Computer Programs(In English)](https://github.com/ZonePG/CS61A)
   - [x] [CS 61B: Data Structures(In English)](https://github.com/ZonePG/CS61B)
+  - [x] [CS 61C: Great Ideas in Computer Architecture (Machine Structures) (In English)](https://inst.eecs.berkeley.edu/~cs61c/su20/)
   - [x] [CMU 15-213: Introduction to Computer Systems(In English)](https://www.cs.cmu.edu/~213/)
   - [x] [CMU 15-445/645: Database Systems(In English)](https://15445.courses.cs.cmu.edu/fall2019/schedule.html)
   - [x] [CS 144: Introduction to Computer Networking(In English)](https://cs144.github.io/)
