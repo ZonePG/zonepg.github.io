@@ -21,6 +21,7 @@ More about me. &nbsp;
 
 ***Learning Plan(Course/Book)***
 - *TODO*
+  - [ ] [CS 110L: Safety in Systems Programming(In English)](https://reberhardt.com/cs110l/spring-2020/)
   - [ ] [CS 162: Operating Systems and System Programming (In English)](https://inst.eecs.berkeley.edu/~cs162/fa20/)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)
