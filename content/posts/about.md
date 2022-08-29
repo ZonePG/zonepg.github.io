@@ -25,6 +25,7 @@ More about me. &nbsp;
   - [ ] [MIT 6.824: Distributed Systems (In English)](https://pdos.csail.mit.edu/6.824/schedule.html)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
   - [ ] 《动手深度学习》(Dive Into Deep Learning)[(In Chinese)](https://zh.d2l.ai/index.html)
+  - [ ] 《机器学习编译》(Machine Learning Compilation)[(In Chinese)](https://mlc.ai/summer22-zh/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)
 - *DONE*
   - [x] The Missing Semester of Your CS Education([In English](https://missing.csail.mit.edu/))([In Chinese](https://missing-semester-cn.github.io/))
