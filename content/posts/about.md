@@ -40,6 +40,7 @@ More about me. &nbsp;
   - [x] 《自己动手写CPU》(In Chinese)
   - [x] [循序渐进，学习开发一个RISC-V上的操作系统(In Chinese)](https://www.bilibili.com/video/BV1Q5411w7z5?p=1&spm_id_from=333.788.b_6d756c74695f70616765.1)
   - [x] [The Rust Programming Language(In English)](https://doc.rust-lang.org/book/title-page.html)
+  - [x] [Web Development for Beginners - A Curriculum(In English)](https://github.com/microsoft/Web-Dev-For-Beginners)
 
 <br/>
 
