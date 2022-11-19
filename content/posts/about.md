@@ -7,9 +7,9 @@ hidden = "true"
 ***Study Computer Science. Code for fun.***
 
 More about me. &nbsp;
-[Blog (Chinese)]({{< ref "/posts" >}} "Blog (Chinese)") &nbsp;
 [CS-Notes (Chinese)](https://github.com/ZonePG/cs-notes) &nbsp;
 [Résumé (Chinese)](/files/MyResume_cn.pdf)
+<!-- [Blog (Chinese)]({{< ref "/posts" >}} "Blog (Chinese)") &nbsp; -->
 
 <br/>
 
@@ -24,6 +24,7 @@ More about me. &nbsp;
   - [ ] [CS 162: Operating Systems and System Programming (In English)](https://inst.eecs.berkeley.edu/~cs162/fa20/)
   - [ ] [MIT 6.824: Distributed Systems (In English)](https://pdos.csail.mit.edu/6.824/schedule.html)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
+  - [ ] [CMU 11-777: MultiModal Machine Learning(In English)](https://cmu-multicomp-lab.github.io/mmml-course/fall2020/)
   - [ ] 《动手深度学习》(Dive Into Deep Learning)[(In Chinese)](https://zh.d2l.ai/index.html)
   - [ ] 《机器学习编译》(Machine Learning Compilation)[(In Chinese)](https://mlc.ai/summer22-zh/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)

@@ -30,15 +30,15 @@ name = "RSS"
 url = "https://zonepg.github.io/posts/index.xml"
 
 # Main menu Items
-[[menu.main]]
-name = "All posts"
-url = "/posts"
-weight = 1
+# [[menu.main]]
+# name = "All posts"
+# url = "/posts"
+# weight = 1
 
-[[menu.main]]
-name = "Tags"
-url = "/tags"
-weight = 2
+# [[menu.main]]
+# name = "Tags"
+# url = "/tags"
+# weight = 2
 
 
 [markup]
