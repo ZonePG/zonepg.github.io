@@ -24,7 +24,6 @@ More about me. &nbsp;
   - [ ] [CS 162: Operating Systems and System Programming (In English)](https://inst.eecs.berkeley.edu/~cs162/fa20/)
   - [ ] [MIT 6.824: Distributed Systems (In English)](https://pdos.csail.mit.edu/6.824/schedule.html)
   - [ ] [CMU 15-721: Advanced Database Systems(In English)](https://15721.courses.cs.cmu.edu/spring2020/)
-  - [ ] [CMU 11-777: MultiModal Machine Learning(In English)](https://cmu-multicomp-lab.github.io/mmml-course/fall2020/)
   - [ ] 《动手深度学习》(Dive Into Deep Learning)[(In Chinese)](https://zh.d2l.ai/index.html)
   - [ ] 《机器学习编译》(Machine Learning Compilation)[(In Chinese)](https://mlc.ai/summer22-zh/)
   - [ ] 《设计数据密集型应用》(Designing Data-Intensive Applications)[(In Chinese)](http://ddia.vonng.com/#/)
@@ -42,6 +41,7 @@ More about me. &nbsp;
   - [x] [循序渐进，学习开发一个RISC-V上的操作系统(In Chinese)](https://www.bilibili.com/video/BV1Q5411w7z5?p=1&spm_id_from=333.788.b_6d756c74695f70616765.1)
   - [x] [The Rust Programming Language(In English)](https://doc.rust-lang.org/book/title-page.html)
   - [x] [Web Development for Beginners - A Curriculum(In English)](https://github.com/microsoft/Web-Dev-For-Beginners)
+  - [x] [MultiModal Machine Learning Tutorial(In English)](https://cmu-multicomp-lab.github.io/mmml-tutorial/schedule/)
 
 <br/>
 
