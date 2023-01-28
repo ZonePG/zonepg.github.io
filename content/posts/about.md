@@ -26,7 +26,6 @@ More about me. &nbsp;
   - [ ] CS 193p: Developing Applications for iOS using SwiftUI [(In English)](https://cs193p.sites.stanford.edu/)
   - [ ] MIT 15.S12 Blockchain and Money, Fall 2018 [(In English)](https://legacyopenlibrary.org/mit-15-s12-blockchain-and-money-fall-2018/)
   - [ ] 北京大学肖臻老师《区块链技术与应用》公开课 [(In Chinese)](http://zhenxiao.com/blockchain/)
-  - [ ] AcWing 算法基础课 [(In Chinese)](https://www.acwing.com/activity/content/introduction/11/)
 
 - *DONE*
   - [x] The Missing Semester of Your CS Education([In English](https://missing.csail.mit.edu/))([In Chinese](https://missing-semester-cn.github.io/))
@@ -44,6 +43,7 @@ More about me. &nbsp;
   - [x] Web Development for Beginners - A Curriculum [(In English)](https://github.com/microsoft/Web-Dev-For-Beginners)
   - [x] MultiModal Machine Learning Tutorial [(In English)](https://cmu-multicomp-lab.github.io/mmml-tutorial/schedule/)
   - [x] 《动手深度学习》(Dive Into Deep Learning)[(In Chinese)](https://zh.d2l.ai/index.html)
+  - [x] AcWing 算法基础课 [(In Chinese)](https://www.acwing.com/activity/content/introduction/11/)
 
 <br/>
 
