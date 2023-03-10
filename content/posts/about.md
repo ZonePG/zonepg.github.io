@@ -11,13 +11,13 @@ More about me. &nbsp;
 [Résumé (Chinese)](/files/MyResume_cn.pdf)
 <!-- [Blog (Chinese)]({{< ref "/posts" >}} "Blog (Chinese)") &nbsp; -->
 
-<br/>
+<!-- <br/>
 
 ***Project***
 - [A Basic toy-Interpreter in Python](https://github.com/ZonePG/impl-basic-toy)
 - [A Text Classify Web in Python](https://github.com/ZonePG/TextClassify)
 
-<br>
+<br> -->
 
 ***Learning Plan(Course/Book)***
 - *TODO*
