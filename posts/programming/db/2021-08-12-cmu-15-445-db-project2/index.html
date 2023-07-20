@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CMU 15-445/645 PROJECT #2 - B&#43;TREE - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CMU 15-445/645 PROJECT #2 - B&#43;TREE" />
+<meta property="og:description" content="这一部分前前后后做了两周，到目前为止仍然有个并发的 bug 没有解决，没有拿到满分，准备先去去完成后面的内容回来再来看看。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+Checkpoint 1 TASK #1 - B&#43;TREE PAGES 这一部分大都是补全Get, Set函数即可。
+需要注意的是，其中 GetSize() 就是 k-v 对数，根据 ppt 来看，对于一个page来说，能装的最多有效k-v 对数也就是 max_size - 1对。
+对于 internal_page 来说，第一个 key 也就是 array[0].first 是非法的 key，但是它的 value 是有效的，在计算 size 时我们仍然给它算作一对 k-v，它的 value 也就是 array[0].second 就是它孩子的page_id 对于 leaf_page 来说，真正的 value 直接保存在 array[0].second 中，所以第一个 key(array[0]) 是有效的。 对于 GetMinSize() 也需要注意如下几点。
+如果当前结点是根结点 如果根结点是叶子结点，那么它的 min_size 就是 1，表示没有有效的 key。 如果根结点是internal page，那么它的 min_size 就是 2，需要至少一个有效的 key 来 route 到叶子结点。 如果不是根结点 是 inernal_page，那么 min_size 是 (max_size &#43; 1) / 2 是 leaf_page，那么 min_size 是 max_size / 2 以 max_size = 3 为例子，那么 leaf_page 的 min_size 就是 1，internal_page 的 min_size 就是2" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/db/2021-08-12-cmu-15-445-db-project2/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-08-18T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-08-18T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CMU 15-445/645 PROJECT #2 - B&#43;TREE"/>
+<meta name="twitter:description" content="这一部分前前后后做了两周，到目前为止仍然有个并发的 bug 没有解决，没有拿到满分，准备先去去完成后面的内容回来再来看看。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+Checkpoint 1 TASK #1 - B&#43;TREE PAGES 这一部分大都是补全Get, Set函数即可。
+需要注意的是，其中 GetSize() 就是 k-v 对数，根据 ppt 来看，对于一个page来说，能装的最多有效k-v 对数也就是 max_size - 1对。
+对于 internal_page 来说，第一个 key 也就是 array[0].first 是非法的 key，但是它的 value 是有效的，在计算 size 时我们仍然给它算作一对 k-v，它的 value 也就是 array[0].second 就是它孩子的page_id 对于 leaf_page 来说，真正的 value 直接保存在 array[0].second 中，所以第一个 key(array[0]) 是有效的。 对于 GetMinSize() 也需要注意如下几点。
+如果当前结点是根结点 如果根结点是叶子结点，那么它的 min_size 就是 1，表示没有有效的 key。 如果根结点是internal page，那么它的 min_size 就是 2，需要至少一个有效的 key 来 route 到叶子结点。 如果不是根结点 是 inernal_page，那么 min_size 是 (max_size &#43; 1) / 2 是 leaf_page，那么 min_size 是 max_size / 2 以 max_size = 3 为例子，那么 leaf_page 的 min_size 就是 1，internal_page 的 min_size 就是2"/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CMU 15-445/645 PROJECT #2 - B&#43;TREE</h1>
+			<div class="meta">Posted on Aug 18, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p>这一部分前前后后做了两周，到目前为止仍然有个并发的 bug 没有解决，没有拿到满分，准备先去去完成后面的内容回来再来看看。</p>
+<p>遵循<code>Andy Pavlo</code>要求，代码存放在私有仓库。</p>
+<h2 id="checkpoint-1">Checkpoint 1</h2>
+<h3 id="task-1---btree-pages">TASK #1 - B+TREE PAGES</h3>
+<p>这一部分大都是补全<code>Get</code>, <code>Set</code>函数即可。</p>
+<p>需要注意的是，其中 <code>GetSize()</code> 就是 k-v 对数，根据 ppt 来看，对于一个page来说，能装的最多<strong>有效</strong>k-v 对数也就是 max_size - 1对。</p>
+<ul>
+<li>对于 internal_page 来说，第一个 key 也就是 array[0].first 是非法的 key，但是它的 value 是有效的，在计算 size 时我们仍然给它算作一对 k-v，它的 value 也就是 array[0].second 就是它孩子的page_id</li>
+<li>对于 leaf_page 来说，真正的 value 直接保存在 array[0].second 中，所以第一个 key(array[0]) 是有效的。</li>
+</ul>
+<p>对于 <code>GetMinSize()</code> 也需要注意如下几点。</p>
+<ul>
+<li>如果当前结点是根结点
+<ul>
+<li>如果根结点是叶子结点，那么它的 min_size 就是 1，表示没有有效的 key。</li>
+<li>如果根结点是internal page，那么它的 min_size 就是 2，需要至少一个有效的 key 来 route 到叶子结点。</li>
+</ul>
+</li>
+<li>如果不是根结点
+<ul>
+<li>是 inernal_page，那么 min_size 是 (max_size + 1) / 2</li>
+<li>是 leaf_page，那么 min_size 是 max_size / 2</li>
+</ul>
+</li>
+</ul>
+<p>以 max_size = 3 为例子，那么 leaf_page 的 min_size 就是 1，internal_page 的 min_size 就是2</p>
+<h3 id="task-2a---btree-data-structure-insertion--point-search">TASK #2.A - B+TREE DATA STRUCTURE (INSERTION &amp; POINT SEARCH)</h3>
+<p>这一部分要实现 Insert 与 GetValue 功能。</p>
+<h4 id="insert">Insert</h4>
+<p>对于 Insert 部分，首先判断是否是空树，如果是空树，需要<code>StartNewTree()</code>。</p>
+<p>如果它不是空树，应当考虑插入到某个叶子结点中，也就是<code>InsertIntoLeaf()</code>，通过<code>FindLeafPage</code>找到叶子结点，并将 k-v 插入到叶子结点中。</p>
+<p>如果插入后 <code>leaf_page-&gt;GetSize() &gt;= leaf_page-&gt;GetMaxSize()</code>，那么就应当 Split 一个新的 leaf_page 了，并各自保存原来叶子结点的一半值，通过<code>InsertIntoParent</code> 设置新的leaf_page的parent，并更新parent上相应的 k-v，来 route 新的 leaf_page。</p>
+<p><code>InsertIntoParent</code>时需要考虑原来的结点是否是 root_page，如果它是 root_page 那么就应当 NewPage 并设置新的 root_page；
+如果不是 root_page，如果插入到当前 parent 时，parent 作为 internal_page 的 size 出现了 <code>parent_page_size &gt; parent_page-&gt;GetMaxSize()</code> 的情况，那么需要 <code>Split</code> parent 后继续递归 <code>InsertIntoParent</code>。</p>
+<h4 id="getvalue">GetValue</h4>
+<p><code>GetValue</code>部分就十分简单了，直接根据 key 找到叶子结点，再在叶子结点中进行二分查找到真正的key。</p>
+<h2 id="checkpoint-2">CHECKPOINT #2</h2>
+<h3 id="task-2b---btree-data-structure-deletion">TASK #2.B - B+TREE DATA STRUCTURE (DELETION)</h3>
+<p>对于 <code>Remove</code> 部分，首先找到叶子结点，在该叶子结点中删除影响的 key-value，如果删除后 size 小于 min_size 了，那么就要做 <code>CoalesceOrRedistribute()</code>的工作。</p>
+<p><code>CoalesceOrRedistribute()</code>实现细节如下。</p>
+<ul>
+<li>如果它是根结点，那么需要 <code>AdjustRoot()</code>
+<ul>
+<li>根结点是叶子的话，说明删除后就是一颗空树了。</li>
+<li>根结点是internal_page 的话，min_size 是2，删除后 min_size 为 1，还剩唯一的一个孩子route，将这个孩子结点作为根结点。</li>
+</ul>
+</li>
+<li>如果不是根结点，需要获取当前结点的 parent，以及 sibling 结点。
+<ul>
+<li>如果 sibling 结点的数量比 min_size 要小的话，那么可以作合并的操作。合并后删除 parent 上的相应 k-v，并检查 parent 的大小，决定是否递归<code>CoalesceOrRedistribute</code>。(<code>Coalesce</code>)</li>
+<li>如果 sibling 结点的数量比 min_size 大的话，那么就是可以将 sibling 的某个值分给当前结点。并更新 parent 的key。(<code>Redistribute</code>)</li>
+</ul>
+</li>
+</ul>
+<h3 id="task-3---index-iterator">TASK #3 - INDEX ITERATOR</h3>
+<p>实现迭代器的操作，用来遍历树。</p>
+<h3 id="task-4---concurrent-index">TASK #4 - CONCURRENT INDEX</h3>
+<p>这一部分课上讲的很详细，关于 <code>Latch Crabing/Coupling</code>。</p>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/database">DataBase</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

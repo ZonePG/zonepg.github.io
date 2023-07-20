@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>Scheme 解释器中尾递归优化的实现 - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="Scheme 解释器中尾递归优化的实现" />
+<meta property="og:description" content="这是 CS61A 2020 fall Project4 的 PROBLEM 19，优化 Scheme 解释器的尾递归程序。
+为什么要优化尾递归程序 以 factorial 为例子，python 编写的递归、迭代版本实现如下：
+# tail-recursion def factorial_recursion(n, k): if n == 0: return k else: return factorial(n - 1, k * n) # iteration def factorial_iteration(n, k): while n &gt; 0: n, k = n - 1, k * n return k 其中，它们的时间复杂度均为 O(n)，迭代的时间复杂度为 O(1)，而递归版本的空间复杂度尾 O(n)，因为 n 次调用需要 n 个栈帧保存程序参数变量。
+因此如果调用factorial_recursion(1000, 1)会因为超过最大递归深度（空间复杂度太大）而导致我们所说的爆栈，factorial_iteration则不会，因为它的空间复杂度是常量。
+实际上，factorial_recursion每一次递归调用时，可以丢弃上一次调用的栈帧，从而达到与迭代版本一样的常量空间复杂度的效果。
+比如，factorial_recursion(1000, 1) 调用 factorial_recursion(999, 1000 * 1)，实际上已经将变量保存到第二次调用的栈帧的变量k中，上一次的栈帧我们不需要再保留。最后，只需要返回最后一次递归调用的 k 即可。可以发现，其实这样的思想就迭代。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/pl/2022-03-01-tail-recursion-optimization/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-03-01T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-03-01T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Scheme 解释器中尾递归优化的实现"/>
+<meta name="twitter:description" content="这是 CS61A 2020 fall Project4 的 PROBLEM 19，优化 Scheme 解释器的尾递归程序。
+为什么要优化尾递归程序 以 factorial 为例子，python 编写的递归、迭代版本实现如下：
+# tail-recursion def factorial_recursion(n, k): if n == 0: return k else: return factorial(n - 1, k * n) # iteration def factorial_iteration(n, k): while n &gt; 0: n, k = n - 1, k * n return k 其中，它们的时间复杂度均为 O(n)，迭代的时间复杂度为 O(1)，而递归版本的空间复杂度尾 O(n)，因为 n 次调用需要 n 个栈帧保存程序参数变量。
+因此如果调用factorial_recursion(1000, 1)会因为超过最大递归深度（空间复杂度太大）而导致我们所说的爆栈，factorial_iteration则不会，因为它的空间复杂度是常量。
+实际上，factorial_recursion每一次递归调用时，可以丢弃上一次调用的栈帧，从而达到与迭代版本一样的常量空间复杂度的效果。
+比如，factorial_recursion(1000, 1) 调用 factorial_recursion(999, 1000 * 1)，实际上已经将变量保存到第二次调用的栈帧的变量k中，上一次的栈帧我们不需要再保留。最后，只需要返回最后一次递归调用的 k 即可。可以发现，其实这样的思想就迭代。"/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">Scheme 解释器中尾递归优化的实现</h1>
+			<div class="meta">Posted on Mar 1, 2022</div>
+		</div>
+		
+
+		<section class="body">
+			<p>这是 CS61A <a href="https://inst.eecs.berkeley.edu/~cs61a/fa20/proj/scheme/#problem-19">2020 fall</a> Project4  的 PROBLEM 19，优化 Scheme 解释器的尾递归程序。</p>
+<h2 id="为什么要优化尾递归程序">为什么要优化尾递归程序</h2>
+<p>以 <code>factorial</code> 为例子，python 编写的递归、迭代版本实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># tail-recursion</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">factorial_recursion</span>(n, k):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> n <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> k
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> factorial(n <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, k <span style="color:#f92672">*</span> n)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># iteration</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">factorial_iteration</span>(n, k):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> n <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>        n, k <span style="color:#f92672">=</span> n <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, k <span style="color:#f92672">*</span> n
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> k
+</span></span></code></pre></div><p>其中，它们的时间复杂度均为 O(n)，迭代的时间复杂度为 O(1)，而递归版本的空间复杂度尾 O(n)，因为 n 次调用需要 n 个栈帧保存程序参数变量。</p>
+<p>因此如果调用<code>factorial_recursion(1000, 1)</code>会因为超过最大递归深度（空间复杂度太大）而导致我们所说的<strong>爆栈</strong>，<code>factorial_iteration</code>则不会，因为它的空间复杂度是常量。</p>
+<p>实际上，<code>factorial_recursion</code>每一次递归调用时，可以丢弃上一次调用的栈帧，从而达到与迭代版本一样的常量空间复杂度的效果。</p>
+<p>比如，<code>factorial_recursion(1000, 1)</code> 调用 <code>factorial_recursion(999, 1000 * 1)</code>，实际上已经将变量保存到第二次调用的栈帧的变量<code>k</code>中，上一次的栈帧我们不需要再保留。最后，只需要返回最后一次递归调用的 k 即可。可以发现，其实这样的思想就迭代。</p>
+<p>因此一个尾递归程序可以转换为一个迭代程序，从而达到常量的空间复杂度。在 Project4 中，我们希望 scheme 解释器的尾递归程序，可以被解释成迭代程序执行。例如，我们需要优化 scheme 解释器的实现，使得 scheme 尾递归版本的 <code>factorial</code> 同样是常量的空间复杂度：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#66d9ef">define </span>(<span style="color:#a6e22e">factorial</span> n k)
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>(zero? n) k)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">factorial</span> (- n <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>                   (* k n)))
+</span></span></code></pre></div><h2 id="实现">实现</h2>
+<h3 id="程序中如何判断尾递归调用">程序中如何判断尾递归调用</h3>
+<p>视频这一节的 <a href="https://www.youtube.com/watch?v=V4HDNg79EXo&amp;list=PL6BsET-8jgYXdYh7kYQ-4HkO_EF_BItoz&amp;index=3">tail calls</a> 讲述了如下判断方式：</p>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="https://www.youtube.com/embed/V4HDNg79EXo" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<p><img src="/pl/tail-calls.png" alt="tcp-connection"></p>
+<ul>
+<li>lambda 表达式函数体的最后一个子表达式。</li>
+<li>if 表达式中的程序体的子表达式。</li>
+<li>cond 表达式中的所有非谓词表示式（非判断部分）。</li>
+<li>and, or, begin, let 的最后一个子表达式。</li>
+</ul>
+<h3 id="scheme-解释器中的优化实现">Scheme 解释器中的优化实现</h3>
+<p>Thunk 类实例表示它的类成员变量 expr 需要在类成员变量 env 中被计算。</p>
+<p>当 <code>optimized_eval</code> 接受非原子的 tail-call 表达式，它立即返回 Thunk 实例，而不是继续去递归 <code>scheme_eval(expr, env)</code> 计算表达式，而是先返回，再计算 Thunk 实例中的 expr，相当于回收之前的递归深度/空间。</p>
+<p>否则的话，它应当反复调用 <code>original_scheme_eval</code>，直到它返回值不是 Thunk 类型。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">optimize_tail_calls</span>(original_scheme_eval):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Return a properly tail recursive version of an eval function.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">optimized_eval</span>(expr, env, tail<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;Evaluate Scheme expression EXPR in environment ENV. If TAIL,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        return a Thunk containing an expression for further evaluation.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> tail <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> scheme_symbolp(expr) <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> self_evaluating(expr):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> Thunk(expr, env)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">=</span> Thunk(expr, env)
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># BEGIN PROBLEM 19</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;*** YOR CODE HERE ***&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> isinstance(result, Thunk):
+</span></span><span style="display:flex;"><span>            result <span style="color:#f92672">=</span> original_scheme_eval(result<span style="color:#f92672">.</span>expr, result<span style="color:#f92672">.</span>env)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> result
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># END PROBLEM 19</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> optimized_eval
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>scheme_eval <span style="color:#f92672">=</span> optimize_tail_calls(scheme_eval) <span style="color:#75715e"># uncomment this!</span>
+</span></span></code></pre></div><p>遵循尾递归调用判断规则，设置 optimize_tail_calls 的第三个参数 <code>tail</code> 为 True。</p>
+<ul>
+<li>lambda, cond, let, begin 涉及 <code>eval_all</code>。</li>
+<li>if 涉及 <code>do_if_form</code>。</li>
+<li>and, or 分别是 <code>do_and_form</code>, <code>do_or_form</code>。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">eval_all</span>(expressions, env):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># BEGIN PROBLEM 7</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># return scheme_eval(expressions.first, env) # replace this with lines of your own code</span>
+</span></span><span style="display:flex;"><span>    value <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> expressions <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> nil:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> expressions<span style="color:#f92672">.</span>rest <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> nil:
+</span></span><span style="display:flex;"><span>            value <span style="color:#f92672">=</span> scheme_eval(expressions<span style="color:#f92672">.</span>first, env)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            value <span style="color:#f92672">=</span> scheme_eval(expressions<span style="color:#f92672">.</span>first, env, <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>        expressions <span style="color:#f92672">=</span> expressions<span style="color:#f92672">.</span>rest
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> value
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># END PROBLEM 7</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">do_if_form</span>(expressions, env):
+</span></span><span style="display:flex;"><span>    validate_form(expressions, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> is_true_primitive(scheme_eval(expressions<span style="color:#f92672">.</span>first, env)):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> scheme_eval(expressions<span style="color:#f92672">.</span>rest<span style="color:#f92672">.</span>first, env, <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> len(expressions) <span style="color:#f92672">==</span> <span style="color:#ae81ff">3</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> scheme_eval(expressions<span style="color:#f92672">.</span>rest<span style="color:#f92672">.</span>rest<span style="color:#f92672">.</span>first, env, <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">do_and_form</span>(expressions, env):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># BEGIN PROBLEM 12</span>
+</span></span><span style="display:flex;"><span>    value <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;*** YOUR CODE HERE ***&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> expressions <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> nil:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> expressions<span style="color:#f92672">.</span>rest <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> nil:
+</span></span><span style="display:flex;"><span>            value <span style="color:#f92672">=</span> scheme_eval(expressions<span style="color:#f92672">.</span>first, env)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            value <span style="color:#f92672">=</span> scheme_eval(expressions<span style="color:#f92672">.</span>first, env, <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> value <span style="color:#f92672">is</span> <span style="color:#66d9ef">False</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>        expressions <span style="color:#f92672">=</span> expressions<span style="color:#f92672">.</span>rest
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> value
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">do_or_form</span>(expressions, env):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># BEGIN PROBLEM 12</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;*** YOUR CODE HERE ***&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> expressions <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> nil:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> expressions<span style="color:#f92672">.</span>rest <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> nil:
+</span></span><span style="display:flex;"><span>            value <span style="color:#f92672">=</span> scheme_eval(expressions<span style="color:#f92672">.</span>first, env)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            value <span style="color:#f92672">=</span> scheme_eval(expressions<span style="color:#f92672">.</span>first, env, <span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> value <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> <span style="color:#66d9ef">False</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> value
+</span></span><span style="display:flex;"><span>        expressions <span style="color:#f92672">=</span> expressions<span style="color:#f92672">.</span>rest
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># END PROBLEM 12</span>
+</span></span></code></pre></div>
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/programming-language">Programming Language</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

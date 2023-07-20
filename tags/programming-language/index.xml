@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Programming Language on ZonePG</title>
+    <link>https://zonepg.github.io/tags/programming-language/</link>
+    <description>Recent content in Programming Language on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Tue, 01 Mar 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/programming-language/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Scheme 解释器中尾递归优化的实现</title>
+      <link>https://zonepg.github.io/posts/programming/pl/2022-03-01-tail-recursion-optimization/</link>
+      <pubDate>Tue, 01 Mar 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/pl/2022-03-01-tail-recursion-optimization/</guid>
+      <description>这是 CS61A 2020 fall Project4 的 PROBLEM 19，优化 Scheme 解释器的尾递归程序。
+为什么要优化尾递归程序 以 factorial 为例子，python 编写的递归、迭代版本实现如下：
+# tail-recursion def factorial_recursion(n, k): if n == 0: return k else: return factorial(n - 1, k * n) # iteration def factorial_iteration(n, k): while n &amp;gt; 0: n, k = n - 1, k * n return k 其中，它们的时间复杂度均为 O(n)，迭代的时间复杂度为 O(1)，而递归版本的空间复杂度尾 O(n)，因为 n 次调用需要 n 个栈帧保存程序参数变量。
+因此如果调用factorial_recursion(1000, 1)会因为超过最大递归深度（空间复杂度太大）而导致我们所说的爆栈，factorial_iteration则不会，因为它的空间复杂度是常量。
+实际上，factorial_recursion每一次递归调用时，可以丢弃上一次调用的栈帧，从而达到与迭代版本一样的常量空间复杂度的效果。
+比如，factorial_recursion(1000, 1) 调用 factorial_recursion(999, 1000 * 1)，实际上已经将变量保存到第二次调用的栈帧的变量k中，上一次的栈帧我们不需要再保留。最后，只需要返回最后一次递归调用的 k 即可。可以发现，其实这样的思想就迭代。</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CS144 Lab Checkpoint 2: the TCP receiver - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CS144 Lab Checkpoint 2: the TCP receiver" />
+<meta property="og:description" content="Lab 2 是实现 TCPReceiver，它的任务如下：
+通过 segment received() 方法接收到来的TCPSegment，这些 TCPSegments 可能是乱序、重复的。 将 TCPSegment 取出来的数据与 index，装入到 StreamReassembler 中，写入 ByteStream，ByteStream 中的字节流都是有序、正确的，因此用户就可以正确读取。 除此之外，TCPReceiver 还会将自己的确认号(ackno)和窗口大小(window size)发送出去： 确认号返回当前第一个未组装的字节序号 窗口大小就是还可以组装的字节序列长度。 Translating between 64-bit indexes and 32-bit seqnos 本地中的 StreamReassembler 和 ByteStream 字节索引都是 64 位的 stream index，保证足够了的存储空间，并且第一个字节的序号下标总是从 0 开始。但是在网络传输中使用 64 位的字节索引，数据的传输大小就十分吓人了，因此网络传输中的 TCPSegments 使用 32 位的字节索引。因此接收 TCPSegment 与发送 ackno 时，需要实现 64 位索引与 32 位索引的相互转换。引入这种转换增加了三种复杂性：
+网络传输中的字节流的 序列号(seqno) 为 $2^{32}-1$ 时，下一个字节的序列号将是 0。 数据传输时以 起始序列号(ISN, Initial Sequence Number) 开始，这是一个随机值：为了保证安全性，确保序列号不能被可猜测并且不太可能重复。同时这个序列号有 SYN(beginning of stream) 标记，表示字节流的起始位置。剩下部分的字节流的序列号将是按 ISN 的顺序，比如字节流的第一个字节的序列号将是 ISN&#43;1 (mod $2^{32}$)，第二个字节将是 ISN&#43;2 (mod $2^{32}$)，以此类推。 TCP 除了确保接收所有的字节数据以外，还确保接收字节流的开始和结束标记，分别是 SYN(beginning-of-stream) 和 FIN(end-of-stream)，它们各自占有一个序列号。字节流中的每个字节数据也占有一个序列号。需要注意的是，SYN 和 FIN 标记并不是字节流的一部分，它们只代表字节流的开始和结束。 强调一下，sequence number 也就是序列号在 TCPSegment 的 header 中传输；absolute sequence number 也就是绝对序列号，从 0 开始；stream index，StreamReassembler 装载数据时使用的索引，从 0 开始。下图是 &ldquo;cat&rdquo; 为例子，三种不同类型的 index 如下：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/net/2021-12-01-cs144-lab2/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-12-01T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-12-01T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CS144 Lab Checkpoint 2: the TCP receiver"/>
+<meta name="twitter:description" content="Lab 2 是实现 TCPReceiver，它的任务如下：
+通过 segment received() 方法接收到来的TCPSegment，这些 TCPSegments 可能是乱序、重复的。 将 TCPSegment 取出来的数据与 index，装入到 StreamReassembler 中，写入 ByteStream，ByteStream 中的字节流都是有序、正确的，因此用户就可以正确读取。 除此之外，TCPReceiver 还会将自己的确认号(ackno)和窗口大小(window size)发送出去： 确认号返回当前第一个未组装的字节序号 窗口大小就是还可以组装的字节序列长度。 Translating between 64-bit indexes and 32-bit seqnos 本地中的 StreamReassembler 和 ByteStream 字节索引都是 64 位的 stream index，保证足够了的存储空间，并且第一个字节的序号下标总是从 0 开始。但是在网络传输中使用 64 位的字节索引，数据的传输大小就十分吓人了，因此网络传输中的 TCPSegments 使用 32 位的字节索引。因此接收 TCPSegment 与发送 ackno 时，需要实现 64 位索引与 32 位索引的相互转换。引入这种转换增加了三种复杂性：
+网络传输中的字节流的 序列号(seqno) 为 $2^{32}-1$ 时，下一个字节的序列号将是 0。 数据传输时以 起始序列号(ISN, Initial Sequence Number) 开始，这是一个随机值：为了保证安全性，确保序列号不能被可猜测并且不太可能重复。同时这个序列号有 SYN(beginning of stream) 标记，表示字节流的起始位置。剩下部分的字节流的序列号将是按 ISN 的顺序，比如字节流的第一个字节的序列号将是 ISN&#43;1 (mod $2^{32}$)，第二个字节将是 ISN&#43;2 (mod $2^{32}$)，以此类推。 TCP 除了确保接收所有的字节数据以外，还确保接收字节流的开始和结束标记，分别是 SYN(beginning-of-stream) 和 FIN(end-of-stream)，它们各自占有一个序列号。字节流中的每个字节数据也占有一个序列号。需要注意的是，SYN 和 FIN 标记并不是字节流的一部分，它们只代表字节流的开始和结束。 强调一下，sequence number 也就是序列号在 TCPSegment 的 header 中传输；absolute sequence number 也就是绝对序列号，从 0 开始；stream index，StreamReassembler 装载数据时使用的索引，从 0 开始。下图是 &ldquo;cat&rdquo; 为例子，三种不同类型的 index 如下："/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CS144 Lab Checkpoint 2: the TCP receiver</h1>
+			<div class="meta">Posted on Dec 1, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p><img src="/net/cs144-lab1/tcp-socket.png" alt="tcp-socket"></p>
+<p>Lab 2 是实现 <strong>TCPReceiver</strong>，它的任务如下：</p>
+<ul>
+<li>通过 <code>segment received()</code> 方法接收到来的<strong>TCPSegment</strong>，这些 TCPSegments 可能是乱序、重复的。</li>
+<li>将 TCPSegment 取出来的数据与 index，装入到 <strong>StreamReassembler</strong> 中，写入 <strong>ByteStream</strong>，ByteStream 中的字节流都是有序、正确的，因此用户就可以正确读取。</li>
+<li>除此之外，TCPReceiver 还会将自己的<strong>确认号</strong>(ackno)和<strong>窗口大小</strong>(window size)发送出去：
+<ul>
+<li>确认号返回当前第一个未组装的字节序号</li>
+<li>窗口大小就是还可以组装的字节序列长度。</li>
+</ul>
+</li>
+</ul>
+<h2 id="translating-between-64-bit-indexes-and-32-bit-seqnos">Translating between 64-bit indexes and 32-bit seqnos</h2>
+<p>本地中的 <strong>StreamReassembler</strong> 和 <strong>ByteStream</strong> 字节索引都是 64 位的 <strong>stream index</strong>，保证足够了的存储空间，并且第一个字节的序号下标总是从 0 开始。但是在网络传输中使用 64 位的字节索引，数据的传输大小就十分吓人了，因此网络传输中的 <strong>TCPSegments</strong> 使用 32 位的字节索引。因此接收 TCPSegment 与发送 ackno 时，需要实现 64 位索引与 32 位索引的相互转换。引入这种转换增加了三种复杂性：</p>
+<ul>
+<li>网络传输中的字节流的 <strong>序列号(seqno)</strong> 为 $2^{32}-1$ 时，下一个字节的序列号将是 0。</li>
+<li>数据传输时以 <strong>起始序列号(ISN, Initial Sequence Number)</strong> 开始，这是一个随机值：为了保证安全性，确保序列号不能被可猜测并且不太可能重复。同时这个序列号有 <strong>SYN(beginning of stream)</strong> 标记，表示字节流的起始位置。剩下部分的字节流的序列号将是按 ISN 的顺序，比如字节流的第一个字节的序列号将是 ISN+1 (mod $2^{32}$)，第二个字节将是 ISN+2 (mod $2^{32}$)，以此类推。</li>
+<li>TCP 除了确保接收所有的字节数据以外，还确保接收字节流的开始和结束标记，分别是 <strong>SYN(beginning-of-stream)</strong> 和 <strong>FIN(end-of-stream)</strong>，它们各自占有一个序列号。字节流中的每个字节数据也占有一个序列号。需要注意的是，SYN 和 FIN 标记并不是字节流的一部分，它们只代表字节流的开始和结束。</li>
+</ul>
+<p>强调一下，<strong>sequence number</strong> 也就是序列号在 TCPSegment 的 header 中传输；<strong>absolute sequence number</strong> 也就是绝对序列号，从 0 开始；<strong>stream index</strong>，StreamReassembler 装载数据时使用的索引，从 0 开始。下图是 &ldquo;cat&rdquo; 为例子，三种不同类型的 index 如下：</p>
+<p><img src="/net/cs144-lab2/index-type.png" alt="index-type"></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Sequence Number</th>
+<th style="text-align:center">Absolute Sequence Number</th>
+<th style="text-align:center">Stream Indices</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Start at the ISN</td>
+<td style="text-align:center">Start at 0</td>
+<td style="text-align:center">Start at 0</td>
+</tr>
+<tr>
+<td style="text-align:center">Include SYN/FIN</td>
+<td style="text-align:center">Include SYN/FIN</td>
+<td style="text-align:center">Omit SYN/FIN</td>
+</tr>
+<tr>
+<td style="text-align:center">32 bits, wrapping</td>
+<td style="text-align:center">64 bits, non-wrapping</td>
+<td style="text-align:center">64 bits, non-wrapping</td>
+</tr>
+<tr>
+<td style="text-align:center">&ldquo;seqno&rdquo;</td>
+<td style="text-align:center">&ldquo;absolute seqno&rdquo;</td>
+<td style="text-align:center">&ldquo;stream index&rdquo;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>absolute seqno</strong> 与 <strong>stream index</strong> 的转换十分简单，只需加一或减一即可。而 <strong>absolute seqno</strong> 与 <strong>seqno</strong> 的转换就有点复杂了。<strong>WrappingInt32</strong> 是封装好的一个类，用于代表 32 位的 seqno，并提供了一些帮助函数，用于转换。</p>
+<h3 id="具体实现">具体实现</h3>
+<h4 id="wrappingint32-wrapuint64-t-n-wrappingint32-isn">WrappingInt32 wrap(uint64 t n, WrappingInt32 isn)</h4>
+<p>absolute seqno -&gt; seqno</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>WrappingInt32 <span style="color:#a6e22e">wrap</span>(<span style="color:#66d9ef">uint64_t</span> n, WrappingInt32 isn) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> isn <span style="color:#f92672">+</span> (n <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0x00000000ffffffff</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="uint64-t-unwrapwrappingint32-n-wrappingint32-isn-uint64-t-checkpoint">uint64 t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64 t checkpoint)</h4>
+<p>seqno -&gt; absolute seqno</p>
+<p>将序列号转换成离 checkpoint 最近的绝对序列号。例如，序列号 &ldquo;17&rdquo; 可以对应绝对序列号 17，也可以对应 $2^{32}$ + 17，2 * $2^{32}$ + 17，3 * $2^{32}$ + 17 &hellip; 。在这些可能的情况中，距离 checkpoint 最近的就是需要返回的绝对序列号。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">// added help func
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// distance beetween absolute_seqno_case and checkpoint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">uint64_t</span> <span style="color:#a6e22e">distance</span>(<span style="color:#66d9ef">uint64_t</span> absolute_seqno_case, <span style="color:#66d9ef">uint64_t</span> checkpoint) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (absolute_seqno_case <span style="color:#f92672">&gt;=</span> checkpoint) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> absolute_seqno_case <span style="color:#f92672">-</span> checkpoint;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> checkpoint <span style="color:#f92672">-</span> absolute_seqno_case;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uint64_t</span> <span style="color:#a6e22e">unwrap</span>(WrappingInt32 n, WrappingInt32 isn, <span style="color:#66d9ef">uint64_t</span> checkpoint) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> base <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xffffffff00000000</span> <span style="color:#f92672">&amp;</span> checkpoint;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> absolute_seqno <span style="color:#f92672">=</span> (n <span style="color:#f92672">-</span> isn) <span style="color:#f92672">&amp;</span> (<span style="color:#ae81ff">0x00000000ffffffff</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (n.raw_value() <span style="color:#f92672">&lt;</span> isn.raw_value()) {
+</span></span><span style="display:flex;"><span>      absolute_seqno <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1ul</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">32</span>) <span style="color:#f92672">-</span> ((isn <span style="color:#f92672">-</span> n) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0x00000000ffffffff</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// may have two case as follows
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">uint64_t</span> absolute_seqno_case1 <span style="color:#f92672">=</span> (base <span style="color:#f92672">+</span> absolute_seqno);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> absolute_seqno_case2 <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> (<span style="color:#ae81ff">1ul</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">32</span>) <span style="color:#f92672">+</span> absolute_seqno;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> absolute_seqno_case3 <span style="color:#f92672">=</span> base <span style="color:#f92672">-</span> (<span style="color:#ae81ff">1ul</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">32</span>) <span style="color:#f92672">+</span> absolute_seqno;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (distance(absolute_seqno_case1, checkpoint) <span style="color:#f92672">&lt;=</span> distance(absolute_seqno_case2, checkpoint)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// case1 &lt;= case2 , compare case1 and case3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (distance(absolute_seqno_case1, checkpoint) <span style="color:#f92672">&lt;=</span> distance(absolute_seqno_case3, checkpoint)) {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> absolute_seqno_case1;
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> absolute_seqno_case3;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// case1 &gt; case2, compare case2 and case3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (distance(absolute_seqno_case2, checkpoint) <span style="color:#f92672">&gt;</span> distance(absolute_seqno_case3, checkpoint)) {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> absolute_seqno_case3;
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> absolute_seqno_case2;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="implementing-the-tcp-receiver">Implementing the TCP receiver</h2>
+<p>下图是 TCPSegment 的格式，本次 Lab 涉及了 seqno，SYN，FIN，Payload。</p>
+<p><img src="/net/cs144-lab2/tcp-segment.png" alt="tcp-socket"></p>
+<h3 id="具体实现-1">具体实现</h3>
+<h4 id="segment-received">segment received()</h4>
+<p>接收 TCPSegment，如果它携带 SYN 标志，则需要设置<strong>初始化序列号(ISN, Initial Sequence Number)</strong>，为了能够转换 seqno 与 absolute seqno。</p>
+<p>将 TCPSegment 中的数据装入到 StreamReassembler 中，如果 TCPSegment 携带 FIN 标志，意味着数据(TCPSegment payload)中的最后一个字节就是 ByteStream 的最后一个字节。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPReceiver<span style="color:#f92672">::</span>segment_received(<span style="color:#66d9ef">const</span> TCPSegment <span style="color:#f92672">&amp;</span>seg) {
+</span></span><span style="display:flex;"><span>  WrappingInt32 seqno{seg.header().seqno};
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (seg.header().syn) {
+</span></span><span style="display:flex;"><span>      _isn_set <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>      _isn <span style="color:#f92672">=</span> seqno;
+</span></span><span style="display:flex;"><span>      seqno <span style="color:#f92672">=</span> seqno <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>_isn_set) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> checkpoint <span style="color:#f92672">=</span> _reassembler.first_unassemebled_index();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> absolute_seqno <span style="color:#f92672">=</span> unwrap(seqno, _isn, checkpoint);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">uint64_t</span> stream_index <span style="color:#f92672">=</span> absolute_seqno <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  string data <span style="color:#f92672">=</span> seg.payload().copy();
+</span></span><span style="display:flex;"><span>  _reassembler.push_substring(data, stream_index, seg.header().fin);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="ackno">ackno()</h4>
+<p>如果没有设置 ISN，直接返回空。否则未返回当前第一个未组装的字节序列号(WrappingInt32)，也就是将 stream index (first_unassemebled_index) 转换为 absolute seqno，再调用 <code>wrap</code> 转换成 WrappingInt32。如果 StreamReassembler 已经装入完毕，返回 FIN 之后的序号。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>optional<span style="color:#f92672">&lt;</span>WrappingInt32<span style="color:#f92672">&gt;</span> TCPReceiver<span style="color:#f92672">::</span>ackno() <span style="color:#66d9ef">const</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>_isn_set) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {};
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (_reassembler.stream_out().input_ended()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">wrap</span>(_reassembler.first_unassemebled_index() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, _isn) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">wrap</span>(_reassembler.first_unassemebled_index() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, _isn);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="window-size">window size()</h4>
+<p>返回还可以组装的字节序列长度。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>size_t TCPReceiver<span style="color:#f92672">::</span>window_size() <span style="color:#66d9ef">const</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> _reassembler.first_unacceptable_index() <span style="color:#f92672">-</span> _reassembler.first_unassemebled_index();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/computer-networking">Computer Networking</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linux/MacOS on ZonePG</title>
+    <link>https://zonepg.github.io/tags/linux/macos/</link>
+    <description>Recent content in Linux/MacOS on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright><atom:link href="https://zonepg.github.io/tags/linux/macos/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>tmux 常用命令</title>
+      <link>https://zonepg.github.io/posts/programming/tools/2021-08-11-tmux-use/</link>
+      <pubDate>Wed, 11 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/tools/2021-08-11-tmux-use/</guid>
+      <description>记录一下 tmux 常用命令。
+我使用的是 oh my tmux 的默认配置。
+ctrl+b+?可以查看一些命令帮助。
+会话(session)管理 新建会话：tmux new -s &amp;lt;session-name&amp;gt; 退出会话（会话仍然后台运行）：ctrl+b+d 列出会话：tmux ls 连接会话：tmux attach -t &amp;lt;session-name&amp;gt; 杀死会话：tmux kill-session -t &amp;lt;session-name&amp;gt; 切换会话：ctrl+b+s, ctrl+b+w 重新命名当前会话：ctrl+b+$ 窗口(window)管理 新建窗口：ctrl+b+c 切换窗口：ctrl+b+&amp;lt;window-num&amp;gt;, ctrl+b+h/l 退出当前窗口：ctrl+b+&amp;amp; exit 重新命名当前窗口：ctrl+b+, 窗格(pane)管理 划分上下窗格：ctrl+b+- 划分左右窗格：ctrl+b+_ 移动窗格：ctrl+b+ h/j/k/l 当前窗格与上一个窗格交换位置：ctrl+b+{ 当前窗格与下一个窗格交换位置：ctrl+b+} 关闭当前窗格：ctrl+b+x 当前窗格独立显示：ctrl+b+z </description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>轻量、快速的zsh - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="轻量、快速的zsh" />
+<meta property="og:description" content="之前有过在 ubuntu 折腾 zsh 的经历，使用 oh-my-zsh，这种比较笨重的框架用起来有点卡卡的，遂明确自己的需求，自己动手找了解决方案。
+自己的需求是一个轻量、快速、美观的 shell，功能包括以下：
+支持 vim 配色优雅、好看 展示 git 分支信息 补全、提示 搜索 将 zsh 稍加配置，最终效果如下：
+最终效果图 vim 支持 在 .zshrc 中加入以下配置，可以让你的 zsh 支持vim，这里同时使光标在不同编辑模式下显示不用效果，以及 tab 切换补全。
+# Basic auto/tab complete: autoload -U compinit zstyle &#39;:completion:*&#39; menu select zmodload zsh/complist compinit _comp_options&#43;=(globdots)	# Include hidden files. # vi mode bindkey -v export KEYTIMEOUT=1 # Use vim keys in tab complete menu: bindkey -M menuselect &#39;h&#39; vi-backward-char bindkey -M menuselect &#39;k&#39; vi-up-line-or-history bindkey -M menuselect &#39;l&#39; vi-forward-char bindkey -M menuselect &#39;j&#39; vi-down-line-or-history # Change cursor shape for different vi modes." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/tools/2021-05-19-zsh-config/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-05-19T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-05-19T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="轻量、快速的zsh"/>
+<meta name="twitter:description" content="之前有过在 ubuntu 折腾 zsh 的经历，使用 oh-my-zsh，这种比较笨重的框架用起来有点卡卡的，遂明确自己的需求，自己动手找了解决方案。
+自己的需求是一个轻量、快速、美观的 shell，功能包括以下：
+支持 vim 配色优雅、好看 展示 git 分支信息 补全、提示 搜索 将 zsh 稍加配置，最终效果如下：
+最终效果图 vim 支持 在 .zshrc 中加入以下配置，可以让你的 zsh 支持vim，这里同时使光标在不同编辑模式下显示不用效果，以及 tab 切换补全。
+# Basic auto/tab complete: autoload -U compinit zstyle &#39;:completion:*&#39; menu select zmodload zsh/complist compinit _comp_options&#43;=(globdots)	# Include hidden files. # vi mode bindkey -v export KEYTIMEOUT=1 # Use vim keys in tab complete menu: bindkey -M menuselect &#39;h&#39; vi-backward-char bindkey -M menuselect &#39;k&#39; vi-up-line-or-history bindkey -M menuselect &#39;l&#39; vi-forward-char bindkey -M menuselect &#39;j&#39; vi-down-line-or-history # Change cursor shape for different vi modes."/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">轻量、快速的zsh</h1>
+			<div class="meta">Posted on May 19, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p>之前有过在 ubuntu 折腾 zsh 的经历，使用 oh-my-zsh，这种比较笨重的框架用起来有点卡卡的，遂明确自己的需求，自己动手找了解决方案。</p>
+<p>自己的需求是一个轻量、快速、美观的 shell，功能包括以下：</p>
+<ul>
+<li>支持 vim</li>
+<li>配色优雅、好看</li>
+<li>展示 git 分支信息</li>
+<li>补全、提示</li>
+<li>搜索</li>
+</ul>
+<p>将 zsh 稍加配置，最终效果如下：</p>
+<figure><img src="/tools/2021-05-19-zsh-config/zsh-config-demo.png"/><figcaption>
+            <h4>最终效果图</h4>
+        </figcaption>
+</figure>
+
+<h2 id="vim-支持">vim 支持</h2>
+<p>在 <code>.zshrc</code> 中加入以下配置，可以让你的 zsh 支持vim，这里同时使光标在不同编辑模式下显示不用效果，以及 tab 切换补全。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-zsh" data-lang="zsh"><span style="display:flex;"><span><span style="color:#75715e"># Basic auto/tab complete:</span>
+</span></span><span style="display:flex;"><span>autoload -U compinit
+</span></span><span style="display:flex;"><span>zstyle <span style="color:#e6db74">&#39;:completion:*&#39;</span> menu <span style="color:#66d9ef">select</span>
+</span></span><span style="display:flex;"><span>zmodload zsh/complist
+</span></span><span style="display:flex;"><span>compinit
+</span></span><span style="display:flex;"><span>_comp_options<span style="color:#f92672">+=(</span>globdots<span style="color:#f92672">)</span>		<span style="color:#75715e"># Include hidden files.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># vi mode</span>
+</span></span><span style="display:flex;"><span>bindkey -v
+</span></span><span style="display:flex;"><span>export KEYTIMEOUT<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use vim keys in tab complete menu:</span>
+</span></span><span style="display:flex;"><span>bindkey -M menuselect <span style="color:#e6db74">&#39;h&#39;</span> vi-backward-char
+</span></span><span style="display:flex;"><span>bindkey -M menuselect <span style="color:#e6db74">&#39;k&#39;</span> vi-up-line-or-history
+</span></span><span style="display:flex;"><span>bindkey -M menuselect <span style="color:#e6db74">&#39;l&#39;</span> vi-forward-char
+</span></span><span style="display:flex;"><span>bindkey -M menuselect <span style="color:#e6db74">&#39;j&#39;</span> vi-down-line-or-history
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Change cursor shape for different vi modes.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> zle-keymap-select <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>KEYMAP<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> vicmd <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#f92672">[[</span> $1 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;block&#39;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo -ne <span style="color:#e6db74">&#39;\e[1 q&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>KEYMAP<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> main <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>KEYMAP<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> viins <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>KEYMAP<span style="color:#e6db74">}</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#f92672">[[</span> $1 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;beam&#39;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo -ne <span style="color:#e6db74">&#39;\e[5 q&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>zle -N zle-keymap-select
+</span></span><span style="display:flex;"><span>zle-line-init<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    zle -K viins <span style="color:#75715e"># initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)</span>
+</span></span><span style="display:flex;"><span>    echo -ne <span style="color:#e6db74">&#34;\e[5 q&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>zle -N zle-line-init
+</span></span><span style="display:flex;"><span>echo -ne <span style="color:#e6db74">&#39;\e[5 q&#39;</span> <span style="color:#75715e"># Use beam shape cursor on startup.</span>
+</span></span><span style="display:flex;"><span>preexec<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo -ne <span style="color:#e6db74">&#39;\e[5 q&#39;</span> ;<span style="color:#f92672">}</span> <span style="color:#75715e"># Use beam shape cursor for each new prompt.</span>
+</span></span></code></pre></div><h2 id="工具">工具</h2>
+<h3 id="zinit">zinit</h3>
+<p>使用 <a href="https://github.com/zdharma/zinit">zinit</a> 作为插件管理工具，用法简单，且快。
+根据官方 wiki 安装好后，我们的需求是 <strong>高亮/补全/提示</strong>，安装以下三个插件。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>zinit light zsh-users/zsh-completions
+</span></span><span style="display:flex;"><span>zinit light zsh-users/zsh-autosuggestions
+</span></span><span style="display:flex;"><span>zinit light zsh-users/zsh-syntax-highlighting
+</span></span></code></pre></div><h3 id="starship">starship</h3>
+<p>我们使用<a href="https://starship.rs/">startship</a>配置主题，可以感受以下它官网主页的介绍：</p>
+<blockquote>
+<p>The minimal, blazing-fast, and infinitely customizable prompt for any shell!</p>
+</blockquote>
+<p>这是我的<code>.config/starship.toml</code>配置文件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>add_newline = true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[directory]
+</span></span><span style="display:flex;"><span>truncation_length = 0
+</span></span><span style="display:flex;"><span>truncate_to_repo = false
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[git_branch]
+</span></span><span style="display:flex;"><span>format = &#34;[$branch]($style) &#34;
+</span></span><span style="display:flex;"><span># format = &#34;[$symbol$branch]($style) &#34;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[golang]
+</span></span><span style="display:flex;"><span>format = &#34;[$symbol()]($style)&#34;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[python]
+</span></span><span style="display:flex;"><span>python_binary = &#34;python3&#34;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[cmd_duration]
+</span></span><span style="display:flex;"><span>format = &#34;[$duration]($style) &#34;
+</span></span><span style="display:flex;"><span>min_time = 3_000
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[character]
+</span></span><span style="display:flex;"><span>success_symbol = &#34;[❯](bold green)&#34;
+</span></span><span style="display:flex;"><span>error_symbol = &#34;[✗](bold red)&#34;
+</span></span><span style="display:flex;"><span>vicmd_symbol = &#34;[V](bold blue)&#34;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[username]
+</span></span><span style="display:flex;"><span>style_user = &#34;yellow bold&#34;
+</span></span><span style="display:flex;"><span>style_root = &#34;black bold&#34;
+</span></span><span style="display:flex;"><span>format = &#34;[$user@]($style)&#34;
+</span></span><span style="display:flex;"><span>disabled = false
+</span></span><span style="display:flex;"><span>show_always = true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[hostname]
+</span></span><span style="display:flex;"><span>ssh_only = false
+</span></span><span style="display:flex;"><span>format =  &#34;[$hostname](bold yellow) &#34;
+</span></span><span style="display:flex;"><span>disabled = false
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[package]
+</span></span><span style="display:flex;"><span>disabled = true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[gcloud]
+</span></span><span style="display:flex;"><span>disabled = true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[aws]
+</span></span><span style="display:flex;"><span>disabled = true
+</span></span></code></pre></div><p>现在 zsh 就能达到上面的效果了。</p>
+<h3 id="fzf">fzf</h3>
+<p>再加入 fzf 搜索支持，包括文件搜索，文件夹切换，历史命令搜索。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-zsh" data-lang="zsh"><span style="display:flex;"><span>brew install fzf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># To install useful key bindings and fuzzy completion:</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">$(</span>brew --prefix<span style="color:#66d9ef">)</span>/opt/fzf/install
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>brew install ripgrep
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>brew install --HEAD universal-ctags/universal-ctags/universal-ctags
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>brew install the_silver_searcher
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>brew install fd
+</span></span></code></pre></div><p>安装后，需要将<code>key-bindings.zsh</code>与<code>completion.zsh</code>加入<code>.zshrc</code>
+mac下的option键与普通键盘alt键不太一样，windows下 alt+c 键是 &lt;M-c&gt;，需要去<code>key-bindings.zsh</code>中修改键位绑定<code>option-c</code>即<code>ç</code>。
+这是我的路径：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>/opt/homebrew/opt/fzf/shell/completion.zsh
+</span></span><span style="display:flex;"><span>/opt/homebrew/opt/fzf/shell/key-bindings.zsh
+</span></span></code></pre></div><p>使用<code>ctrl-r</code>, <code>ctrl-t</code>, <code>option-c</code> 即可使用命令搜索、文件搜索、文件夹切换。<code>ctrl-n</code>, <code>ctrl-p</code>进行选择。</p>
+<p><figure><img src="/tools/2021-05-19-zsh-config/zsh-config-fzf-search.png"/><figcaption>
+            <h4>fzf搜索</h4>
+        </figcaption>
+</figure>
+
+我的最终配置在我的 <a href="https://github.com/ZonePG/dotfiles/tree/main/zsh">github仓库</a> 中</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="https://shuxiao.wang/posts/zsh-refresh/">不优化，zsh 也超快</a></li>
+<li><a href="https://www.chrisatmachine.com/Neovim/08-fzf/">Integrate Neovim with FZF &amp; more</a></li>
+</ul>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/shell">shell</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

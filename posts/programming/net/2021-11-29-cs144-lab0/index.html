@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CS144 Lab Checkpoint 0: networking warmup - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CS144 Lab Checkpoint 0: networking warmup" />
+<meta property="og:description" content="Writing a network program using an OS stream socket 我们可以通过 OS 提供的功能，创建可靠双向字节流(reliable bidirectional byte, 又称为流套接字 stream socket)。在这个热身实验中，我们通过可靠双向字节流获取网页数据。
+流套接字看起来像是普通的文件描述符，当两个流套接字连接的时候，某一方流套接字的输入最终会在另一方的流套接字中输出。
+事实上，网络传输过程中并不保证能够传输可靠的字节流，因此在传输过程中，因此数据在网络传输过程中，可能会发生如下四种问题：
+lost，丢失 delivered out of order，乱序 delivered with the contents altered，更改 duplicated and delivered more than once，重复 因此，连接两端之间的主机的 OS 通常会提供 TCP 协议，从而保证传输可靠的字节流。而在后续的 lab 中，我们将动手实现自己的 TCP 协议。
+Writing webget 这一部分我们将使用 OS 提供的 TCP 接口支持，获取网页数据，我们只需要实现 get_URL() 方法即可。
+阅读 TCPSocket 提供的方法：
+connect() 方法向一个 host 发起连接请求， write() 方法向 host 写入发送请求。 read() 方法获取 host 返回的数据。 需要注意的是：
+客户端写入请求时，每一行以 &ldquo;\r\n&rdquo; 结尾。 客户端写入请求时，&ldquo;Connection: close&rdquo;，通知服务器端不再等待客户端发送请求，并将请求的数据返回给客户端。 确保输出服务器传送过来的所有数据，仅调用一次 read() 方法是不够的。 最终实现如下：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/net/2021-11-29-cs144-lab0/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-11-29T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-11-29T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CS144 Lab Checkpoint 0: networking warmup"/>
+<meta name="twitter:description" content="Writing a network program using an OS stream socket 我们可以通过 OS 提供的功能，创建可靠双向字节流(reliable bidirectional byte, 又称为流套接字 stream socket)。在这个热身实验中，我们通过可靠双向字节流获取网页数据。
+流套接字看起来像是普通的文件描述符，当两个流套接字连接的时候，某一方流套接字的输入最终会在另一方的流套接字中输出。
+事实上，网络传输过程中并不保证能够传输可靠的字节流，因此在传输过程中，因此数据在网络传输过程中，可能会发生如下四种问题：
+lost，丢失 delivered out of order，乱序 delivered with the contents altered，更改 duplicated and delivered more than once，重复 因此，连接两端之间的主机的 OS 通常会提供 TCP 协议，从而保证传输可靠的字节流。而在后续的 lab 中，我们将动手实现自己的 TCP 协议。
+Writing webget 这一部分我们将使用 OS 提供的 TCP 接口支持，获取网页数据，我们只需要实现 get_URL() 方法即可。
+阅读 TCPSocket 提供的方法：
+connect() 方法向一个 host 发起连接请求， write() 方法向 host 写入发送请求。 read() 方法获取 host 返回的数据。 需要注意的是：
+客户端写入请求时，每一行以 &ldquo;\r\n&rdquo; 结尾。 客户端写入请求时，&ldquo;Connection: close&rdquo;，通知服务器端不再等待客户端发送请求，并将请求的数据返回给客户端。 确保输出服务器传送过来的所有数据，仅调用一次 read() 方法是不够的。 最终实现如下："/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CS144 Lab Checkpoint 0: networking warmup</h1>
+			<div class="meta">Posted on Nov 29, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<h2 id="writing-a-network-program-using-an-os-stream-socket">Writing a network program using an OS stream socket</h2>
+<p>我们可以通过 OS 提供的功能，创建可靠双向字节流(<strong>reliable bidirectional byte</strong>, 又称为流套接字 <strong>stream socket</strong>)。在这个热身实验中，我们通过可靠双向字节流获取网页数据。</p>
+<p>流套接字看起来像是普通的文件描述符，当两个流套接字连接的时候，某一方流套接字的输入最终会在另一方的流套接字中输出。</p>
+<p>事实上，网络传输过程中并不保证能够传输可靠的字节流，因此在传输过程中，因此数据在网络传输过程中，可能会发生如下四种问题：</p>
+<ul>
+<li>lost，丢失</li>
+<li>delivered out of order，乱序</li>
+<li>delivered with the contents altered，更改</li>
+<li>duplicated and delivered more than once，重复</li>
+</ul>
+<p>因此，连接两端之间的主机的 OS 通常会提供 TCP 协议，从而保证传输可靠的字节流。而在后续的 lab 中，我们将动手实现自己的 TCP 协议。</p>
+<h3 id="writing-webget">Writing webget</h3>
+<p>这一部分我们将使用 OS 提供的 TCP 接口支持，获取网页数据，我们只需要实现 <code>get_URL()</code> 方法即可。</p>
+<p>阅读 <strong>TCPSocket</strong> 提供的方法：</p>
+<ul>
+<li><code>connect()</code> 方法向一个 host 发起连接请求，</li>
+<li><code>write()</code> 方法向 host 写入发送请求。</li>
+<li><code>read()</code> 方法获取 host 返回的数据。</li>
+</ul>
+<p>需要注意的是：</p>
+<ul>
+<li>客户端写入请求时，每一行以 &ldquo;\r\n&rdquo; 结尾。</li>
+<li>客户端写入请求时，&ldquo;Connection: close&rdquo;，通知服务器端不再等待客户端发送请求，并将请求的数据返回给客户端。</li>
+<li>确保输出服务器传送过来的所有数据，仅调用一次 <code>read()</code> 方法是不够的。</li>
+</ul>
+<p>最终实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">get_URL</span>(<span style="color:#66d9ef">const</span> string <span style="color:#f92672">&amp;</span>host, <span style="color:#66d9ef">const</span> string <span style="color:#f92672">&amp;</span>path) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// You will need to connect to the &#34;http&#34; service on
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// the computer whose name is in the &#34;host&#34; string,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// then request the URL path given in the &#34;path&#34; string.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Then you&#39;ll need to print out everything the server sends back,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// (not just one call to read() -- everything) until you reach
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// the &#34;eof&#34; (end of file).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// cerr &lt;&lt; &#34;Function called: get_URL(&#34; &lt;&lt; host &lt;&lt; &#34;, &#34; &lt;&lt; path &lt;&lt; &#34;).\n&#34;;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// cerr &lt;&lt; &#34;Warning: get_URL() has not been implemented yet.\n&#34;;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    TCPSocket tcp_socket;
+</span></span><span style="display:flex;"><span>    tcp_socket.connect(Address(host, <span style="color:#e6db74">&#34;http&#34;</span>));
+</span></span><span style="display:flex;"><span>    tcp_socket.write(<span style="color:#e6db74">&#34;GET &#34;</span> <span style="color:#f92672">+</span> path <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; HTTP/1.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    tcp_socket.write(<span style="color:#e6db74">&#34;HOST: &#34;</span> <span style="color:#f92672">+</span> host <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    tcp_socket.write(<span style="color:#e6db74">&#34;Connection: close</span><span style="color:#ae81ff">\r\n\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>tcp_socket.eof()) {
+</span></span><span style="display:flex;"><span>      cout <span style="color:#f92672">&lt;&lt;</span> tcp_socket.read();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    tcp_socket.close();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="an-in-memory-reliable-byte-stream">An in-memory reliable byte stream</h2>
+<p>这一部分是实现<strong>输入端写入数据，输出端读取数据</strong>的字节流缓冲区。缓冲区大小是有限的，当缓冲区容量满时，不能再写入数据。当输入端不再写入数据时，并且输出端已经将缓冲区的数据读取完毕，也就是缓冲区为空，此时缓冲区的状态就是 <strong>EOF</strong>(end of file)。</p>
+<p>虽然字节流缓冲区是有限的，但是只要满足一定的条件，它可以处理无限长的数据，比如：缓冲区大小为 1，如果每次只输入 1 字节的数据，并且输出端在输入端写入下一个字节之前读取这一字节数据，那么缓冲区就可以处理无限长的数据，只要输入端仍在写入数据。</p>
+<h3 id="具体实现">具体实现</h3>
+<p>虽然缓冲区是先进先出结构，由于缓冲区要有<code>peek_output(const size_t len)</code>方法，也就是查看输出端字节长为 len 的数据，因此使用 <strong>std::deque</strong> 作为缓冲区的数据结构更为合适。</p>
+<p>声明如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">// byte_stream.hh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ByteStream</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here -- add private members as necessary.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    size_t _capacity{};
+</span></span><span style="display:flex;"><span>    size_t _remaining_capacity{};
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>deque<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">char</span><span style="color:#f92672">&gt;</span> _buffer{};
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> _input_ended{};
+</span></span><span style="display:flex;"><span>    size_t _bytes_written{};
+</span></span><span style="display:flex;"><span>    size_t _bytes_read{};
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>size_t ByteStream<span style="color:#f92672">::</span>write(<span style="color:#66d9ef">const</span> string <span style="color:#f92672">&amp;</span>data) {
+</span></span><span style="display:flex;"><span>    size_t write_len <span style="color:#f92672">=</span> min(data.size(), _remaining_capacity);
+</span></span><span style="display:flex;"><span>    _buffer.insert(_buffer.end(), data.begin(), data.begin() <span style="color:#f92672">+</span> write_len);
+</span></span><span style="display:flex;"><span>    _bytes_written <span style="color:#f92672">+=</span> write_len;
+</span></span><span style="display:flex;"><span>    _remaining_capacity <span style="color:#f92672">-=</span> write_len;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> write_len;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] len bytes will be copied from the output side of the buffer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>string ByteStream<span style="color:#f92672">::</span>peek_output(<span style="color:#66d9ef">const</span> size_t len) <span style="color:#66d9ef">const</span> {
+</span></span><span style="display:flex;"><span>    size_t peek_len <span style="color:#f92672">=</span> min(buffer_size(), len);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">string</span>(_buffer.begin(), _buffer.begin() <span style="color:#f92672">+</span> peek_len);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] len bytes will be removed from the output side of the buffer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> ByteStream<span style="color:#f92672">::</span>pop_output(<span style="color:#66d9ef">const</span> size_t len) {
+</span></span><span style="display:flex;"><span>    size_t pop_len <span style="color:#f92672">=</span> min(buffer_size(), len);
+</span></span><span style="display:flex;"><span>    _buffer.erase(_buffer.begin(), _buffer.begin() <span style="color:#f92672">+</span> pop_len);
+</span></span><span style="display:flex;"><span>    _bytes_read <span style="color:#f92672">+=</span> pop_len;
+</span></span><span style="display:flex;"><span>    _remaining_capacity <span style="color:#f92672">+=</span> pop_len;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//! Read (i.e., copy and then pop) the next &#34;len&#34; bytes of the stream
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] len bytes will be popped and returned
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//! \returns a string
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>std<span style="color:#f92672">::</span>string ByteStream<span style="color:#f92672">::</span>read(<span style="color:#66d9ef">const</span> size_t len) {
+</span></span><span style="display:flex;"><span>    string read_str <span style="color:#f92672">=</span> peek_output(len);
+</span></span><span style="display:flex;"><span>    pop_output(len);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> read_str;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> ByteStream<span style="color:#f92672">::</span>end_input() { _input_ended <span style="color:#f92672">=</span> true; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> ByteStream<span style="color:#f92672">::</span>input_ended() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _input_ended; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>size_t ByteStream<span style="color:#f92672">::</span>buffer_size() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _buffer.size(); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> ByteStream<span style="color:#f92672">::</span>buffer_empty() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _buffer.size() <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> ByteStream<span style="color:#f92672">::</span>eof() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">buffer_empty</span>() <span style="color:#f92672">&amp;&amp;</span> input_ended(); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>size_t ByteStream<span style="color:#f92672">::</span>bytes_written() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _bytes_written; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>size_t ByteStream<span style="color:#f92672">::</span>bytes_read() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _bytes_read; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>size_t ByteStream<span style="color:#f92672">::</span>remaining_capacity() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _remaining_capacity; }
+</span></span></code></pre></div>
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/computer-networking">Computer Networking</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

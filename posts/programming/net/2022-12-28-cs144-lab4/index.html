@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CS144 Lab Checkpoint 4: the TCP connection - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CS144 Lab Checkpoint 4: the TCP connection" />
+<meta property="og:description" content="Lab 4 将前面实现的 TCPSender 和 TCPReceiver 组装成 TCPConnection。
+TCP 可靠地传输一对字节流，每一端都有 &ldquo;sender&rdquo; (outbound byte-stream) 和 &ldquo;receiver&rdquo; (inbound byte-stream)，如下图：
+TCPConnection 负责接收和发送 segments。
+实现细节 Receiving segments 接收 segment 主要包括以下几个步骤：
+如果 segment 带有 RST 标志，需要将 inbound 和 outbound stream 都设置为 error 状态。 否则的话，将 segment 传给 TCPReceiver，负责接收相关字段：seqno, SYN, payload, FIN 如果带有 ACK 标志，TCPSender 接收确认号和窗口大小，以便发送 segment。 如果 segment 至少占有一个序列号，确保至少发送回复一个 segment，将自己的 ackno 和 窗口大小告诉对等端。 考虑一个特殊情况，当连接建立的时候，接收的 segment 的 seqno 可能是非法的，也应当回应发送一个 segment 给对等端。 实现如下：
+void TCPConnection::segment_received(const TCPSegment &amp;seg) { // std::cout &lt;&lt; &#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;receive segment." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/net/2022-12-28-cs144-lab4/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-12-28T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-12-28T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CS144 Lab Checkpoint 4: the TCP connection"/>
+<meta name="twitter:description" content="Lab 4 将前面实现的 TCPSender 和 TCPReceiver 组装成 TCPConnection。
+TCP 可靠地传输一对字节流，每一端都有 &ldquo;sender&rdquo; (outbound byte-stream) 和 &ldquo;receiver&rdquo; (inbound byte-stream)，如下图：
+TCPConnection 负责接收和发送 segments。
+实现细节 Receiving segments 接收 segment 主要包括以下几个步骤：
+如果 segment 带有 RST 标志，需要将 inbound 和 outbound stream 都设置为 error 状态。 否则的话，将 segment 传给 TCPReceiver，负责接收相关字段：seqno, SYN, payload, FIN 如果带有 ACK 标志，TCPSender 接收确认号和窗口大小，以便发送 segment。 如果 segment 至少占有一个序列号，确保至少发送回复一个 segment，将自己的 ackno 和 窗口大小告诉对等端。 考虑一个特殊情况，当连接建立的时候，接收的 segment 的 seqno 可能是非法的，也应当回应发送一个 segment 给对等端。 实现如下：
+void TCPConnection::segment_received(const TCPSegment &amp;seg) { // std::cout &lt;&lt; &#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;receive segment."/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CS144 Lab Checkpoint 4: the TCP connection</h1>
+			<div class="meta">Posted on Dec 28, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p><img src="/net/cs144-lab1/tcp-socket.png" alt="tcp-socket"></p>
+<p>Lab 4 将前面实现的 <strong>TCPSender</strong> 和 <strong>TCPReceiver</strong> 组装成 <strong>TCPConnection</strong>。</p>
+<p>TCP 可靠地传输一对字节流，每一端都有 &ldquo;sender&rdquo; (outbound byte-stream) 和 &ldquo;receiver&rdquo; (inbound byte-stream)，如下图：</p>
+<p><img src="/net/cs144-lab4/tcp-connection.png" alt="tcp-connection"></p>
+<p>TCPConnection 负责接收和发送 segments。</p>
+<h2 id="实现细节">实现细节</h2>
+<h3 id="receiving-segments">Receiving segments</h3>
+<p>接收 segment 主要包括以下几个步骤：</p>
+<ul>
+<li>如果 segment 带有 <code>RST</code> 标志，需要将 inbound 和 outbound stream 都设置为 error 状态。</li>
+<li>否则的话，将 segment 传给 TCPReceiver，负责接收相关字段：seqno, SYN, payload, FIN</li>
+<li>如果带有 <code>ACK</code> 标志，TCPSender 接收确认号和窗口大小，以便发送 segment。</li>
+<li>如果 segment 至少占有一个序列号，确保至少发送回复一个 segment，将自己的 ackno 和 窗口大小告诉对等端。</li>
+<li>考虑一个特殊情况，当连接建立的时候，接收的 segment 的 seqno 可能是非法的，也应当回应发送一个 segment 给对等端。</li>
+</ul>
+<p>实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPConnection<span style="color:#f92672">::</span>segment_received(<span style="color:#66d9ef">const</span> TCPSegment <span style="color:#f92672">&amp;</span>seg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;receive segment... \n&#34; &lt;&lt; seg.header().to_string();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>_active) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;active false&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#34; &lt;&lt; std::endl &lt;&lt; std::endl &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// listen, not connect yet
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>_receiver.ackno().has_value() <span style="color:#f92672">&amp;&amp;</span> _sender.next_seqno_absolute() <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;listen, not connect yet&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (seg.header().syn) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// std::cout &lt;&lt; &#34;receive syn&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            _receiver.segment_received(seg);
+</span></span><span style="display:flex;"><span>            connect();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#34; &lt;&lt; std::endl &lt;&lt; std::endl &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _time_since_last_segment_received <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (seg.header().rst) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;receive rst&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        _sender.stream_in().set_error();
+</span></span><span style="display:flex;"><span>        _receiver.stream_out().set_error();
+</span></span><span style="display:flex;"><span>        _active <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _receiver.segment_received(seg);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (seg.header().ack) {
+</span></span><span style="display:flex;"><span>        _sender.ack_received(seg.header().ackno, seg.header().win);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (seg.length_in_sequence_space() <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// syn and fin may occupy 1 seqno
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (_sender.segments_out().size() <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// at least send one segment
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            _sender.send_empty_segment();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        send_segments();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_receiver.ackno().has_value() <span style="color:#f92672">&amp;&amp;</span> (seg.length_in_sequence_space() <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>        (seg.header().seqno <span style="color:#f92672">==</span> _receiver.ackno().value() <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)) {
+</span></span><span style="display:flex;"><span>        _sender.send_empty_segment();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#34; &lt;&lt; std::endl &lt;&lt; std::endl &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><h3 id="sending-segment">Sending segment</h3>
+<p>发送 segment 包括以下步骤：</p>
+<ul>
+<li>请求 TCPSender 待发送的 segments，并装入到发送队列中。</li>
+<li>在装入发送队列之前，请求 TCPReceiver 的 ackno 和窗口大小，添加到待发送的 segment中。</li>
+</ul>
+<p>需要注意的是，每次发送完毕后，我们会请求<code>clean_shutdown()</code>(在<strong>结束连接</strong>部分中解释)，检查是否能结束连接。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPConnection<span style="color:#f92672">::</span>send_segments() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;start to send_segments...&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>_sender.segments_out().empty()) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (i <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// std::cout &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        }
+</span></span><span style="display:flex;"><span>        TCPSegment segment <span style="color:#f92672">=</span> _sender.segments_out().front();
+</span></span><span style="display:flex;"><span>        _sender.segments_out().pop();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (_receiver.ackno().has_value()) {
+</span></span><span style="display:flex;"><span>            segment.header().ack <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>            segment.header().ackno <span style="color:#f92672">=</span> _receiver.ackno().value();
+</span></span><span style="display:flex;"><span>            segment.header().win <span style="color:#f92672">=</span> _receiver.window_size();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// std::cout &lt;&lt; segment.header().to_string();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;TCP data size: &#34; &lt;&lt; segment.length_in_sequence_space() &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;TCP data: &#34; &lt;&lt; segment.payload().str() &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        _segments_out.push(segment);
+</span></span><span style="display:flex;"><span>        i<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;send_segments finish&#34; &lt;&lt; endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    clean_shutdown();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="when-time-passes">When time passes</h3>
+<p>TCPConnection 的 <code>tick</code> 方法暴露给操作系统调用，它负责做这些事情：</p>
+<ul>
+<li>告诉 TCPSender 过了多少时候，也就是调用 TCPSender 的<code>tick</code>方法，它会检查是否超过超时重传时间，并重发未被确认的 segment。</li>
+<li>如果超过最大重传次数，则会终止连接，发送一个带 <code>RST</code> 标志的空 segment 给对等端。</li>
+</ul>
+<p>实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPConnection<span style="color:#f92672">::</span>tick(<span style="color:#66d9ef">const</span> size_t ms_since_last_tick) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;tick &#34; &lt;&lt; ms_since_last_tick &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    _sender.tick(ms_since_last_tick);
+</span></span><span style="display:flex;"><span>    _time_since_last_segment_received <span style="color:#f92672">+=</span> ms_since_last_tick;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_sender.consecutive_retransmissions() <span style="color:#f92672">&gt;</span> TCPConfig<span style="color:#f92672">::</span>MAX_RETX_ATTEMPTS) {
+</span></span><span style="display:flex;"><span>        unclean_shutdown();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    send_segments();
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#34; &lt;&lt; std::endl &lt;&lt; std::endl &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><h3 id="tcpsegment-结构">TCPSegment 结构</h3>
+<p>从上述实现我们可以看出，发送一个 segment 给对等端时，TCPSender 负责了设置 seqno、SYN、FIN、Payload 部分，TCPReceiver 负责了设置 ackno 和窗口大小。如下图，分别是蓝色部分和红色部分。</p>
+<p><img src="/net/cs144-lab4/tcp-segment-lab4.png" alt="tcp-segment"></p>
+<h3 id="结束连接">结束连接</h3>
+<p>有两种结束连接的方式，一个是 <code>unclean_shutdown</code>，一个是<code>clean_shutdown</code>。</p>
+<h4 id="unclean_shutdown">unclean_shutdown</h4>
+<p><code>unclean_shutdown</code> 比较简单，直接发送一个 <code>RST</code> 标志的空 segment 给对等端即可，同时设置 outbound 和 inbound 为空，active 为 false。</p>
+<p>在超出重传次数和 Connection关闭时仍为 active 状态时会用到。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPConnection<span style="color:#f92672">::</span>unclean_shutdown() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;unclean_shutdown...&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    _sender.stream_in().set_error();
+</span></span><span style="display:flex;"><span>    _receiver.stream_out().set_error();
+</span></span><span style="display:flex;"><span>    TCPSegment segment;
+</span></span><span style="display:flex;"><span>    segment.header().rst <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>    _active <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>    _segments_out.push(segment);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#34; &lt;&lt; endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><h4 id="clean_shutdown">clean_shutdown</h4>
+<p><code>clean_shutdown</code>比较复杂，首先考虑以下三种先觉条件：</p>
+<ul>
+<li><strong>prereq #1</strong>：<strong>inbound</strong> stream 已经组装完毕(fully assembled) 并且 input_ended，也就是说 TCPReceiver 接收好了 segment，保证了接收数据的正确性，并且不会再接收 segment，等待用户读取即可。</li>
+<li><strong>prereq #2</strong>：<strong>outbound</strong> stream 为 EOF，也就是说 TCPSender 已经发送完了所有的 segment，并且用户不会再有数据写入发送。</li>
+<li><strong>prereq #3</strong>：<strong>outbound</strong> stream，发送的 segment 都被对等端确认了。</li>
+</ul>
+<p>每次发送完 segment 时都会调用<code>clean_shutdown</code>都会尝试是否能结束连接。</p>
+<p>当 outbound 还没 EOF 时，inbound 已经结束了，也就是满足 <strong>prereq #1</strong> 和 <strong>prereq #2</strong>，也就是说 TCPSender 还有要发送的 segment，TCPReceiver 不再接收对等端的 segment了，这时需要设置 <code>_linger_after_streams_finish</code>变量为 false。</p>
+<p>当 <strong>prereq #1</strong>，<strong>prereq #2</strong>，<strong>prereq #3</strong> 都满足。并且 linger_after_streams_finish 为 false，设置 active 为 false，表示结束连接；linger_after_streams_finish 为 true 时，需要保持连接一段时间，离上次接收 segment 的时间超过了足够的时间(10 * _cfg.rt_timeout)，</p>
+<p>实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPConnection<span style="color:#f92672">::</span>clean_shutdown() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;try clean_shutdown...&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">bool</span> prereq1 <span style="color:#f92672">=</span> (_receiver.unassembled_bytes() <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (_receiver.stream_out().input_ended());
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> prereq2 <span style="color:#f92672">=</span> _sender.stream_in().eof();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> prereq3 <span style="color:#f92672">=</span> (_sender.bytes_in_flight() <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;prereq1: &#34; &lt;&lt; prereq1 &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;prereq2: &#34; &lt;&lt; prereq2 &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;prereq3: &#34; &lt;&lt; prereq3 &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (prereq1 <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>prereq2) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// std::cout &lt;&lt; &#34;set _linger_after_streams_finish false&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        _linger_after_streams_finish <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (prereq1 <span style="color:#f92672">&amp;&amp;</span> prereq2 <span style="color:#f92672">&amp;&amp;</span> prereq3) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (time_since_last_segment_received() <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">10</span> <span style="color:#f92672">*</span> _cfg.rt_timeout <span style="color:#f92672">||</span> <span style="color:#f92672">!</span>_linger_after_streams_finish) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;clean_shutdown success&#34; &lt;&lt; std::endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            _active <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// std::cout &lt;&lt; &#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&#34; &lt;&lt; endl;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>TCPConnection 实现完毕。</p>
+<h2 id="测试">测试</h2>
+<h3 id="逻辑测试">逻辑测试</h3>
+<p><code>make check_lab4</code> 运行本地逻辑测试。</p>
+<p><img src="/net/cs144-lab4/tcp-logical-test.png" alt="tcp-logical-test"></p>
+<h3 id="本地测试-1">本地测试 1</h3>
+<p>第一个窗口运行一个 TCPConnection 作为 server，监听 local address (169.254.144.9)，port 9090：<code>./apps/tcp_ipv4 -l 169.254.144.9 9090</code></p>
+<p>第二个窗口用 <code>wireshark</code> 捕捉发送与接收的 segments：<code>sudo tshark -Pw /tmp/debug.raw -i tun144</code></p>
+<p>第三个窗口运行一个 TCPConnection 作为 client，连接到 server：<code>./apps/tcp_ipv4 -d tun145 -a 169.254.145.9 169.254.144.9 9090</code></p>
+<p>输入一些数据，三个窗口分别如下：</p>
+<p><img src="/net/cs144-lab4/tcp-connection-test-server.png" alt="tcp-connection-test-server"></p>
+<p><img src="/net/cs144-lab4/tcp-connection-test-wireshark.png" alt="tcp-connection-test-wireshark"></p>
+<p><img src="/net/cs144-lab4/tcp-connection-test-client.png" alt="tcp-connection-test-client"></p>
+<h3 id="本地测试-2-client-winsize-为-1零窗口探测">本地测试 2 （client winsize 为 1，零窗口探测）</h3>
+<p><img src="/net/cs144-lab4/tcp-connection-test-server-zeroprobe.png" alt="tcp-connection-test-server-zeroprobe"></p>
+<p><img src="/net/cs144-lab4/tcp-connection-test-wireshark.png" alt="tcp-connection-test-wireshark-zeroprobe"></p>
+<p><img src="/net/cs144-lab4/tcp-connection-test-client-zeroprobe.png" alt="tcp-connection-test-client-zeroprobe"></p>
+<h3 id="性能测试">性能测试</h3>
+<p>斯坦福获得满分的要求是，至少保证 &ldquo;0.10 Gbit/s&rdquo; 的吞吐量。</p>
+<p><img src="/net/cs144-lab4/tcp-connection-test-throughput.png" alt="tcp-connection-test-throughput"></p>
+<h3 id="webget">webget</h3>
+<p>将 Lab 0 中实现的 webget 所用的由 OS 提供的 TCP socket 换成自己实现的 CS144TCPSocket，获取 Internet 上的 web server 资源。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">get_URL</span>(<span style="color:#66d9ef">const</span> string <span style="color:#f92672">&amp;</span>host, <span style="color:#66d9ef">const</span> string <span style="color:#f92672">&amp;</span>path) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// You will need to connect to the &#34;http&#34; service on
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// the computer whose name is in the &#34;host&#34; string,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// then request the URL path given in the &#34;path&#34; string.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Then you&#39;ll need to print out everything the server sends back,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// (not just one call to read() -- everything) until you reach
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// the &#34;eof&#34; (end of file).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// cerr &lt;&lt; &#34;Function called: get_URL(&#34; &lt;&lt; host &lt;&lt; &#34;, &#34; &lt;&lt; path &lt;&lt; &#34;).\n&#34;;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// cerr &lt;&lt; &#34;Warning: get_URL() has not been implemented yet.\n&#34;;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    CS144TCPSocket tcp_socket;
+</span></span><span style="display:flex;"><span>    tcp_socket.connect(Address(host, <span style="color:#e6db74">&#34;http&#34;</span>));
+</span></span><span style="display:flex;"><span>    tcp_socket.write(<span style="color:#e6db74">&#34;GET &#34;</span> <span style="color:#f92672">+</span> path <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; HTTP/1.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    tcp_socket.write(<span style="color:#e6db74">&#34;HOST: &#34;</span> <span style="color:#f92672">+</span> host <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    tcp_socket.write(<span style="color:#e6db74">&#34;Connection: close</span><span style="color:#ae81ff">\r\n\r\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>tcp_socket.eof()) {
+</span></span><span style="display:flex;"><span>        cout <span style="color:#f92672">&lt;&lt;</span> tcp_socket.read();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    tcp_socket.wait_until_closed();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><img src="/net/cs144-lab4/tcp-connection-test-webget.png" alt="tcp-connection-test-webget"></p>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/computer-networking">Computer Networking</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

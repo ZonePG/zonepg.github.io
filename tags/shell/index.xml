@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>shell on ZonePG</title>
+    <link>https://zonepg.github.io/tags/shell/</link>
+    <description>Recent content in shell on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Wed, 19 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/shell/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>轻量、快速的zsh</title>
+      <link>https://zonepg.github.io/posts/programming/tools/2021-05-19-zsh-config/</link>
+      <pubDate>Wed, 19 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/tools/2021-05-19-zsh-config/</guid>
+      <description>之前有过在 ubuntu 折腾 zsh 的经历，使用 oh-my-zsh，这种比较笨重的框架用起来有点卡卡的，遂明确自己的需求，自己动手找了解决方案。
+自己的需求是一个轻量、快速、美观的 shell，功能包括以下：
+支持 vim 配色优雅、好看 展示 git 分支信息 补全、提示 搜索 将 zsh 稍加配置，最终效果如下：
+最终效果图 vim 支持 在 .zshrc 中加入以下配置，可以让你的 zsh 支持vim，这里同时使光标在不同编辑模式下显示不用效果，以及 tab 切换补全。
+# Basic auto/tab complete: autoload -U compinit zstyle &amp;#39;:completion:*&amp;#39; menu select zmodload zsh/complist compinit _comp_options+=(globdots)	# Include hidden files. # vi mode bindkey -v export KEYTIMEOUT=1 # Use vim keys in tab complete menu: bindkey -M menuselect &amp;#39;h&amp;#39; vi-backward-char bindkey -M menuselect &amp;#39;k&amp;#39; vi-up-line-or-history bindkey -M menuselect &amp;#39;l&amp;#39; vi-forward-char bindkey -M menuselect &amp;#39;j&amp;#39; vi-down-line-or-history # Change cursor shape for different vi modes.</description>
+    </item>
+    
+  </channel>
+</rss>

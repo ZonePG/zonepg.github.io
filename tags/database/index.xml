@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>DataBase on ZonePG</title>
+    <link>https://zonepg.github.io/tags/database/</link>
+    <description>Recent content in DataBase on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Sun, 29 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/database/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CMU 15-445/645 PROJECT #3 - Query Execution</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-29-cmu-15-445-db-project3/</link>
+      <pubDate>Sun, 29 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-29-cmu-15-445-db-project3/</guid>
+      <description>这一部分实现是使用课堂所讲的Volcano model，支持qeury execution。每个qeury plan都实现了一个Next方法，通过该方法来检索操作tuple。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+TASK #1 - SYSTEM CATALOG 这一部分是实现System catalog的一些接口。
+CreateTable(Transaction *txn, const std::string &amp;amp;table_name, const Schema &amp;amp;schema): 更新names_, tables_字段。 GetTable(const std::string &amp;amp;table_name), GetTable(table_oid_t table_oid): 通过相应参数获取表。 CreateIndex(txn, index_name, table_name, schema, key_schema key_attrs, keysize): 根据表建立索引，更新index_names_, indexes_字段。 GetIndex(const std::string &amp;amp;index_name, const std::string &amp;amp;table_name), GetIndex(index_oid_t index_oid): 通过参数获取索引。 GetTableIndexes(const std::string &amp;amp;table_name): 获取表的所有索引信息。 TASK #2 - EXECUTORS 这一部分实现excutor，包括sequential scans, index scans, inserts, updates, deletes, nested loop joins, nested index joins, limits with offset, aggregations。</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #2 - B&#43;TREE</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-12-cmu-15-445-db-project2/</link>
+      <pubDate>Wed, 18 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-12-cmu-15-445-db-project2/</guid>
+      <description>这一部分前前后后做了两周，到目前为止仍然有个并发的 bug 没有解决，没有拿到满分，准备先去去完成后面的内容回来再来看看。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+Checkpoint 1 TASK #1 - B+TREE PAGES 这一部分大都是补全Get, Set函数即可。
+需要注意的是，其中 GetSize() 就是 k-v 对数，根据 ppt 来看，对于一个page来说，能装的最多有效k-v 对数也就是 max_size - 1对。
+对于 internal_page 来说，第一个 key 也就是 array[0].first 是非法的 key，但是它的 value 是有效的，在计算 size 时我们仍然给它算作一对 k-v，它的 value 也就是 array[0].second 就是它孩子的page_id 对于 leaf_page 来说，真正的 value 直接保存在 array[0].second 中，所以第一个 key(array[0]) 是有效的。 对于 GetMinSize() 也需要注意如下几点。
+如果当前结点是根结点 如果根结点是叶子结点，那么它的 min_size 就是 1，表示没有有效的 key。 如果根结点是internal page，那么它的 min_size 就是 2，需要至少一个有效的 key 来 route 到叶子结点。 如果不是根结点 是 inernal_page，那么 min_size 是 (max_size + 1) / 2 是 leaf_page，那么 min_size 是 max_size / 2 以 max_size = 3 为例子，那么 leaf_page 的 min_size 就是 1，internal_page 的 min_size 就是2</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #1 - Buffer Pool</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-06-cmu-15-445-db-project1/</link>
+      <pubDate>Fri, 06 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-06-cmu-15-445-db-project1/</guid>
+      <description>记录一下完成 Project #1 的主要思路及踩过的坑。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+LRU Replacement Policy 做过leetcode-146. LRU 缓存机制，可以直接用 hash_map 与 双链表实现，保证操作 O(1) 时间复杂度。 不过这里这里我们可以借用标准库 std::unorder_map, std::list 实现即可。
+Victim, Pin, Unpin操作，直接面向测试用例编程，上传 gradescope 一遍过。
+需要注意的是，LRU存放的都是 Unpin 的 frame_id，同时 Unpin 并不会更新 frame_id 在 LRU 中的位置，
+LRU 供 Buffer Pool 调用，当 Buffer Pool 的 free_list_ 为空时，LRU Vicitm 驱除出来一个 frame_id，这样就可以写入 page 了。
+Pin 直接将 frame_id 从 LRU 删除，说明有线程正在使用 frame_id 上的 page，直接将 frame_id 删除可以保证不会获取到 frame_id 上的 page，这样也就无法对该 page 进行操作了，达到了 Pin 的目的。
+Buffer Pool 首先对 Buffer Pool 中的一些成员进行解释。</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #0 - C&#43;&#43; PRIMER</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-04-cmu-15-445-db-project0/</link>
+      <pubDate>Wed, 04 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-04-cmu-15-445-db-project0/</guid>
+      <description>记录一下完成 Project #0 的主要思路。
+这部分实验目的是熟悉 c++11 内容。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+环境搭建 按着 bustub README.md文档来就好。
+Matrix 为 linear 分配内存，记得初始化赋值为 0。 析构函数函数释放内存。 RowMatrix 为 data_ 分配 T* 数组，将 linear 指针值直接赋值给 data_[i]指针，这样可以共享内存。 也可以为data_[i]分配内存，相应赋值，但是这样就不是共享内存了。 共享内存的话，析构函数只需要释放 data_ 就可以了，父类会自动析构；创建新内存的话，先要释放data_[i]的内存。 RowMatrixOperations 判断运算矩阵纬度是否相等 </description>
+    </item>
+    
+  </channel>
+</rss>

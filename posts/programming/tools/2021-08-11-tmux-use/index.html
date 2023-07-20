@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>tmux 常用命令 - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="tmux 常用命令" />
+<meta property="og:description" content="记录一下 tmux 常用命令。
+我使用的是 oh my tmux 的默认配置。
+ctrl&#43;b&#43;?可以查看一些命令帮助。
+会话(session)管理 新建会话：tmux new -s &lt;session-name&gt; 退出会话（会话仍然后台运行）：ctrl&#43;b&#43;d 列出会话：tmux ls 连接会话：tmux attach -t &lt;session-name&gt; 杀死会话：tmux kill-session -t &lt;session-name&gt; 切换会话：ctrl&#43;b&#43;s, ctrl&#43;b&#43;w 重新命名当前会话：ctrl&#43;b&#43;$ 窗口(window)管理 新建窗口：ctrl&#43;b&#43;c 切换窗口：ctrl&#43;b&#43;&lt;window-num&gt;, ctrl&#43;b&#43;h/l 退出当前窗口：ctrl&#43;b&#43;&amp; exit 重新命名当前窗口：ctrl&#43;b&#43;, 窗格(pane)管理 划分上下窗格：ctrl&#43;b&#43;- 划分左右窗格：ctrl&#43;b&#43;_ 移动窗格：ctrl&#43;b&#43; h/j/k/l 当前窗格与上一个窗格交换位置：ctrl&#43;b&#43;{ 当前窗格与下一个窗格交换位置：ctrl&#43;b&#43;} 关闭当前窗格：ctrl&#43;b&#43;x 当前窗格独立显示：ctrl&#43;b&#43;z " />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/tools/2021-08-11-tmux-use/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-08-11T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-08-11T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="tmux 常用命令"/>
+<meta name="twitter:description" content="记录一下 tmux 常用命令。
+我使用的是 oh my tmux 的默认配置。
+ctrl&#43;b&#43;?可以查看一些命令帮助。
+会话(session)管理 新建会话：tmux new -s &lt;session-name&gt; 退出会话（会话仍然后台运行）：ctrl&#43;b&#43;d 列出会话：tmux ls 连接会话：tmux attach -t &lt;session-name&gt; 杀死会话：tmux kill-session -t &lt;session-name&gt; 切换会话：ctrl&#43;b&#43;s, ctrl&#43;b&#43;w 重新命名当前会话：ctrl&#43;b&#43;$ 窗口(window)管理 新建窗口：ctrl&#43;b&#43;c 切换窗口：ctrl&#43;b&#43;&lt;window-num&gt;, ctrl&#43;b&#43;h/l 退出当前窗口：ctrl&#43;b&#43;&amp; exit 重新命名当前窗口：ctrl&#43;b&#43;, 窗格(pane)管理 划分上下窗格：ctrl&#43;b&#43;- 划分左右窗格：ctrl&#43;b&#43;_ 移动窗格：ctrl&#43;b&#43; h/j/k/l 当前窗格与上一个窗格交换位置：ctrl&#43;b&#43;{ 当前窗格与下一个窗格交换位置：ctrl&#43;b&#43;} 关闭当前窗格：ctrl&#43;b&#43;x 当前窗格独立显示：ctrl&#43;b&#43;z "/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">tmux 常用命令</h1>
+			<div class="meta">Posted on Aug 11, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p>记录一下 tmux 常用命令。</p>
+<p>我使用的是 oh my tmux 的默认配置。</p>
+<p><code>ctrl+b+?</code>可以查看一些命令帮助。</p>
+<h2 id="会话session管理">会话(session)管理</h2>
+<ul>
+<li>新建会话：<code>tmux new -s &lt;session-name&gt;</code></li>
+<li>退出会话（会话仍然后台运行）：<code>ctrl+b+d</code></li>
+<li>列出会话：<code>tmux ls</code></li>
+<li>连接会话：<code>tmux attach -t &lt;session-name&gt;</code></li>
+<li>杀死会话：<code>tmux kill-session -t &lt;session-name&gt;</code></li>
+<li>切换会话：<code>ctrl+b+s</code>, <code>ctrl+b+w</code></li>
+<li>重新命名当前会话：<code>ctrl+b+$</code></li>
+</ul>
+<h2 id="窗口window管理">窗口(window)管理</h2>
+<ul>
+<li>新建窗口：<code>ctrl+b+c</code></li>
+<li>切换窗口：<code>ctrl+b+&lt;window-num&gt;</code>, <code>ctrl+b+h/l</code></li>
+<li>退出当前窗口：<code>ctrl+b+&amp;</code> <code>exit</code></li>
+<li>重新命名当前窗口：<code>ctrl+b+,</code></li>
+</ul>
+<h2 id="窗格pane管理">窗格(pane)管理</h2>
+<ul>
+<li>划分上下窗格：<code>ctrl+b+-</code></li>
+<li>划分左右窗格：<code>ctrl+b+_</code></li>
+<li>移动窗格：<code>ctrl+b+ h/j/k/l</code></li>
+<li>当前窗格与上一个窗格交换位置：<code>ctrl+b+{</code></li>
+<li>当前窗格与下一个窗格交换位置：<code>ctrl+b+}</code></li>
+<li>关闭当前窗格：<code>ctrl+b+x</code></li>
+<li>当前窗格独立显示：<code>ctrl+b+z</code></li>
+</ul>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/linux/macos">Linux/MacOS</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

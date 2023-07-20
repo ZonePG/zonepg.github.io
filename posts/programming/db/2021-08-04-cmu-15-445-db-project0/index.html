@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CMU 15-445/645 PROJECT #0 - C&#43;&#43; PRIMER - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CMU 15-445/645 PROJECT #0 - C&#43;&#43; PRIMER" />
+<meta property="og:description" content="记录一下完成 Project #0 的主要思路。
+这部分实验目的是熟悉 c&#43;&#43;11 内容。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+环境搭建 按着 bustub README.md文档来就好。
+Matrix 为 linear 分配内存，记得初始化赋值为 0。 析构函数函数释放内存。 RowMatrix 为 data_ 分配 T* 数组，将 linear 指针值直接赋值给 data_[i]指针，这样可以共享内存。 也可以为data_[i]分配内存，相应赋值，但是这样就不是共享内存了。 共享内存的话，析构函数只需要释放 data_ 就可以了，父类会自动析构；创建新内存的话，先要释放data_[i]的内存。 RowMatrixOperations 判断运算矩阵纬度是否相等 " />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/db/2021-08-04-cmu-15-445-db-project0/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-08-04T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-08-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CMU 15-445/645 PROJECT #0 - C&#43;&#43; PRIMER"/>
+<meta name="twitter:description" content="记录一下完成 Project #0 的主要思路。
+这部分实验目的是熟悉 c&#43;&#43;11 内容。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+环境搭建 按着 bustub README.md文档来就好。
+Matrix 为 linear 分配内存，记得初始化赋值为 0。 析构函数函数释放内存。 RowMatrix 为 data_ 分配 T* 数组，将 linear 指针值直接赋值给 data_[i]指针，这样可以共享内存。 也可以为data_[i]分配内存，相应赋值，但是这样就不是共享内存了。 共享内存的话，析构函数只需要释放 data_ 就可以了，父类会自动析构；创建新内存的话，先要释放data_[i]的内存。 RowMatrixOperations 判断运算矩阵纬度是否相等 "/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CMU 15-445/645 PROJECT #0 - C&#43;&#43; PRIMER</h1>
+			<div class="meta">Posted on Aug 4, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p>记录一下完成 Project #0 的主要思路。</p>
+<p>这部分实验目的是熟悉 <code>c++11</code> 内容。</p>
+<p>遵循<code>Andy Pavlo</code>要求，代码存放在私有仓库。</p>
+<h2 id="环境搭建">环境搭建</h2>
+<p>按着 <a href="https://github.com/cmu-db/bustub">bustub</a> <code>README.md</code>文档来就好。</p>
+<h2 id="matrix">Matrix</h2>
+<ul>
+<li>为 <code>linear</code> 分配内存，记得初始化赋值为 0。</li>
+<li>析构函数函数释放内存。</li>
+</ul>
+<h2 id="rowmatrix">RowMatrix</h2>
+<ul>
+<li>为 <code>data_</code> 分配 <code>T*</code> 数组，将 <code>linear</code> 指针值直接赋值给 <code>data_[i]</code>指针，这样可以共享内存。</li>
+<li>也可以为<code>data_[i]</code>分配内存，相应赋值，但是这样就不是共享内存了。</li>
+<li>共享内存的话，析构函数只需要释放 <code>data_</code> 就可以了，父类会自动析构；创建新内存的话，先要释放<code>data_[i]</code>的内存。</li>
+</ul>
+<h2 id="rowmatrixoperations">RowMatrixOperations</h2>
+<ul>
+<li>判断运算矩阵纬度是否相等</li>
+</ul>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/database">DataBase</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

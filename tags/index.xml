@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on ZonePG</title>
+    <link>https://zonepg.github.io/tags/</link>
+    <description>Recent content in Tags on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Tue, 01 Mar 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Programming Language</title>
+      <link>https://zonepg.github.io/tags/programming-language/</link>
+      <pubDate>Tue, 01 Mar 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/programming-language/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Computer Networking</title>
+      <link>https://zonepg.github.io/tags/computer-networking/</link>
+      <pubDate>Thu, 20 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/computer-networking/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>DataBase</title>
+      <link>https://zonepg.github.io/tags/database/</link>
+      <pubDate>Sun, 29 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/database/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Operating System</title>
+      <link>https://zonepg.github.io/tags/operating-system/</link>
+      <pubDate>Tue, 29 Jun 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/operating-system/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>shell</title>
+      <link>https://zonepg.github.io/tags/shell/</link>
+      <pubDate>Wed, 19 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/shell/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Computer Architecture</title>
+      <link>https://zonepg.github.io/tags/computer-architecture/</link>
+      <pubDate>Thu, 15 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/computer-architecture/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>CPU</title>
+      <link>https://zonepg.github.io/tags/cpu/</link>
+      <pubDate>Tue, 13 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/cpu/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Verilog</title>
+      <link>https://zonepg.github.io/tags/verilog/</link>
+      <pubDate>Tue, 13 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/verilog/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>博客搭建</title>
+      <link>https://zonepg.github.io/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Linux/MacOS</title>
+      <link>https://zonepg.github.io/tags/linux/macos/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/tags/linux/macos/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

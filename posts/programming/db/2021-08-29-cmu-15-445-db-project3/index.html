@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CMU 15-445/645 PROJECT #3 - Query Execution - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CMU 15-445/645 PROJECT #3 - Query Execution" />
+<meta property="og:description" content="这一部分实现是使用课堂所讲的Volcano model，支持qeury execution。每个qeury plan都实现了一个Next方法，通过该方法来检索操作tuple。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+TASK #1 - SYSTEM CATALOG 这一部分是实现System catalog的一些接口。
+CreateTable(Transaction *txn, const std::string &amp;table_name, const Schema &amp;schema): 更新names_, tables_字段。 GetTable(const std::string &amp;table_name), GetTable(table_oid_t table_oid): 通过相应参数获取表。 CreateIndex(txn, index_name, table_name, schema, key_schema key_attrs, keysize): 根据表建立索引，更新index_names_, indexes_字段。 GetIndex(const std::string &amp;index_name, const std::string &amp;table_name), GetIndex(index_oid_t index_oid): 通过参数获取索引。 GetTableIndexes(const std::string &amp;table_name): 获取表的所有索引信息。 TASK #2 - EXECUTORS 这一部分实现excutor，包括sequential scans, index scans, inserts, updates, deletes, nested loop joins, nested index joins, limits with offset, aggregations。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/db/2021-08-29-cmu-15-445-db-project3/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-08-29T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-08-29T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CMU 15-445/645 PROJECT #3 - Query Execution"/>
+<meta name="twitter:description" content="这一部分实现是使用课堂所讲的Volcano model，支持qeury execution。每个qeury plan都实现了一个Next方法，通过该方法来检索操作tuple。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+TASK #1 - SYSTEM CATALOG 这一部分是实现System catalog的一些接口。
+CreateTable(Transaction *txn, const std::string &amp;table_name, const Schema &amp;schema): 更新names_, tables_字段。 GetTable(const std::string &amp;table_name), GetTable(table_oid_t table_oid): 通过相应参数获取表。 CreateIndex(txn, index_name, table_name, schema, key_schema key_attrs, keysize): 根据表建立索引，更新index_names_, indexes_字段。 GetIndex(const std::string &amp;index_name, const std::string &amp;table_name), GetIndex(index_oid_t index_oid): 通过参数获取索引。 GetTableIndexes(const std::string &amp;table_name): 获取表的所有索引信息。 TASK #2 - EXECUTORS 这一部分实现excutor，包括sequential scans, index scans, inserts, updates, deletes, nested loop joins, nested index joins, limits with offset, aggregations。"/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CMU 15-445/645 PROJECT #3 - Query Execution</h1>
+			<div class="meta">Posted on Aug 29, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p>这一部分实现是使用课堂所讲的<code>Volcano model</code>，支持<code>qeury execution</code>。每个<code>qeury plan</code>都实现了一个<code>Next</code>方法，通过该方法来检索操作<code>tuple</code>。</p>
+<p>遵循<code>Andy Pavlo</code>要求，代码存放在私有仓库。</p>
+<h3 id="task-1---system-catalog">TASK #1 - SYSTEM CATALOG</h3>
+<p>这一部分是实现<code>System catalog</code>的一些接口。</p>
+<ul>
+<li><code>CreateTable(Transaction *txn, const std::string &amp;table_name, const Schema &amp;schema)</code>: 更新<code>names_</code>, <code>tables_</code>字段。</li>
+<li><code>GetTable(const std::string &amp;table_name)</code>, <code>GetTable(table_oid_t table_oid)</code>: 通过相应参数获取表。</li>
+<li><code>CreateIndex(txn, index_name, table_name, schema, key_schema key_attrs, keysize)</code>: 根据表建立索引，更新<code>index_names_</code>, <code>indexes_</code>字段。</li>
+<li><code>GetIndex(const std::string &amp;index_name, const std::string &amp;table_name)</code>, <code>GetIndex(index_oid_t index_oid)</code>: 通过参数获取索引。</li>
+<li><code>GetTableIndexes(const std::string &amp;table_name)</code>: 获取表的所有索引信息。</li>
+</ul>
+<h3 id="task-2---executors">TASK #2 - EXECUTORS</h3>
+<p>这一部分实现<code>excutor</code>，包括<code>sequential scans</code>, <code>index scans</code>, <code>inserts</code>, <code>updates</code>, <code>deletes</code>, <code>nested loop joins</code>, <code>nested index joins</code>, <code>limits with offset</code>, <code>aggregations</code>。</p>
+<p><code>Init()</code>接口设置要扫描的初始状态，如获取要扫描的表、索引等变量。</p>
+<p><code>Next()</code>接口在每次调用时，返回一个<code>tuple</code>以及<code>record id</code>，可以是每次全表扫描时的<code>tuple</code>，对于<code>inserts</code>这样的<code>excutor</code>，就并不需要设置<code>tuple</code>与<code>record id</code>了。</p>
+<h4 id="sequential-scans">sequential scans</h4>
+<p>全表扫描的 sql 语句如：<code>SELECT colA, colB FROM test_1 WHERE colA &gt; 600</code>。</p>
+<p>通过<code>Init()</code>方法获取要扫表的表，通过迭代遍历表。</p>
+<p><code>Next()</code>遍历表中的每个<code>tuple</code>，通过<code>plan_-&gt;GetPredicate()-&gt;Evaluate</code>判断是否满足谓词条件（这里是 <code>WHERE colA &gt; 600</code> 这样的条件）。</p>
+<h4 id="index-scans">index scans</h4>
+<p>使用 project2 实现的 B+ 树建立索引扫描即可。</p>
+<h4 id="insert">insert</h4>
+<p><code>excutor</code>将<code>tuple</code>插入到表中，同时更新索引信息。两种插入方式：
+<code>INSERT INTO empty_table2 SELECT colA, colB FROM test_1 WHERE colA &lt; 500</code>；
+<code>INSERT INTO empty_table2 VALUES (100, 10), (101, 11), (102, 12)</code>，讨论<code>child_executor_</code>即可。</p>
+<h4 id="update">update</h4>
+<p><code>excutor</code>先 scan 获取<code>tuple</code>与<code>rid</code>，使用<code>GenerateUpdateTuple</code>方法获取更新的<code>tuple</code>，同时维护索引，删除原来的索引Entry，插入新的索引Entry。</p>
+<h4 id="delete">delete</h4>
+<p><code>excutor</code>先 scan 获取<code>tuple</code>与<code>rid</code>，使用<code>MarkDelete</code>方法使其在表上不可见，在事务提交时被删除。同时维护索引，删除索引Entry。</p>
+<h4 id="nested-loop-join">nested loop join</h4>
+<p>遍历 outer table 的 tuple 迭代器，逻辑为两级循环。</p>
+<h4 id="index-nested-loop-join">index nested loop join</h4>
+<p>遍历 outer table 的 tuple 迭代器，通过 outer table 的 tuple 与 index 的schema_, key_attrs_ 构建 inner table 的 key，从而可以在索引中找到 inner_table_ 的 tuple。</p>
+<h4 id="aggregation">aggregation</h4>
+<p>对OutputSchema的每一列，将<code>EvalueaAggregate</code>的返回值<code>Value</code>组合为 tuple。</p>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/database">DataBase</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

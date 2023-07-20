@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Verilog on ZonePG</title>
+    <link>https://zonepg.github.io/tags/verilog/</link>
+    <description>Recent content in Verilog on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Tue, 13 Apr 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/verilog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>OpenMIPS处理器</title>
+      <link>https://zonepg.github.io/posts/programming/ca/2021-04-13-cpu-from-scratch/</link>
+      <pubDate>Tue, 13 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/ca/2021-04-13-cpu-from-scratch/</guid>
+      <description>最近在看《自己动手写CPU》，实现一个 5级流水线的 OpenMIPS处理器。这篇文章记录保存实现过程中用到的元器件接口以及系统结构结构图，主要为图片内容，方便查阅。
+教学版OpenMIPS处理器蓝图 外部接口 文件说明 流水线各个阶段对应的模块、文件 数据相关 逻辑、移位指令的数据相关 HI、LO寄存器带来的数据相关 数据流图 只实现一条指令的ori时的数据流图 添加了数据前推的OpenMIPS数据流图（回写、译码数据相关通过判断即可解决） 添加了移动操作指令后的数据流图 解决HI、寄存器带来的数据相关问题后的数据流图 增加算术操作后的数据流图 为实现转移指令而修改的数据流图 实现mips32指令集中所有整数指令之后的数据流图 系统结构图 原始的OpenMIPS五级流水线系统结构图（用于实现ori指令） 为实现数据前推而对OpenMIPS结构所做的修改 为实现移动操作而对OpenMIPS结构所做的修改 为实现流水线暂停机制而对系统结构所做的修改 为实现转移指令而对系统结构所做的修改 SOPC 实现 最小SOPC实现 确定指令种类 逻辑、移位操作与空指令 移动操作指令 算术操作指令 算术操作指令 乘累加、乘累减指令 转移指令 </description>
+    </item>
+    
+    <item>
+      <title>轻量级Verilog仿真环境搭建iVerilog&#43;GTKWave</title>
+      <link>https://zonepg.github.io/posts/programming/ca/2021-03-25-iverilog-gtkwave/</link>
+      <pubDate>Thu, 25 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/ca/2021-03-25-iverilog-gtkwave/</guid>
+      <description>由于体系结构课程要用到verilog来实现MIPSCPU，之前上组成原理课程与数字逻辑课程用过ModelSim与Vivado，这两软件实在是太笨重了，同学们基本都是只拿来做做仿真运行就行了，ModelSim软件bug巨多，而Vivado编译运行速度实在是一言难尽。所以在网上找了一些轻量级Verilog仿真运行方案，Icarus Verilog + GTKWave似乎是一个不错的选择
+iVerilog开源、支持各平台，有语法检查，仿真，可以满足课程需求。
+这里给出Windows环境搭建，并给出我个人的食用方案。
+iVerilog 安装 iverlog，我个人下载的是iverilog-v11-20201123-x64_setup.exe [18.1MB]即可（不知道为什么2021版的突然突然44M，不过比 Vivado 10个G总舒服多了)。一路点下去，记得选中设置环境变量。
+将会安装好以下 3 个工具：
+iverlog：编译 verilog代码 vvp：将可执行文件生成仿真波形 gtkwave：打开仿真波形文件，显示波形 安装好后，可以在windows命令行中输入iverilog, vvp, gtkwave检查环境变量是否设置成功。
+食用方式 iverilog可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第三章 demo代码：
+├── pc_reg.v(PC寄存器实现) ├── rom.v(指令存储器实现) ├── rom.data(指令存储器数据) ├── inst_fetch.v(综合模块实现) ├── inst_fetch_tb.v(测试模块实现) ├── run.bat(编译运行脚本) ├── rmfile.bat(删除输出文件脚本) pc_reg.v module pc_reg(input wire clk, input wire rst, output reg[5:0] pc, output reg ce); // 指令存储器使能信号 always @(posedge clk) begin if (rst == 1&amp;#39;b1) begin ce &amp;lt;= 1&amp;#39;b0; // 在复位信号有效的时候，指令存储器使能信号无效 end else begin ce &amp;lt;= 1&amp;#39;b1; // 复位信号无效的时候，指令存储器使能信号有效 end end always @(posedge clk) begin if (ce == 1&amp;#39;b0) begin pc &amp;lt;= 6&amp;#39;h00; // 指令存储器使能信号有效时，pc保持为0 end else begin pc &amp;lt;= pc + 1&amp;#39;b1; end end endmodule rom.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Computer Networking on ZonePG</title>
+    <link>https://zonepg.github.io/tags/computer-networking/</link>
+    <description>Recent content in Computer Networking on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Thu, 20 Jan 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/computer-networking/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CS144 Lab Checkpoint 7: putting it all together</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-01-20-cs144-lab7/</link>
+      <pubDate>Thu, 20 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-01-20-cs144-lab7/</guid>
+      <description>Lab7 不需要写任何代码，这一部分验证我们前面 Lab 所有实现的正确性。
+The Network 如下图，Lab7 build/app/lab7为我们构建了这样一个网络。
+server 执行./apps/lab7 server cs144.keithw.org 3000，输出如下： ❯ ./apps/lab7 server cs144.keithw.org 3000 DEBUG: Network interface has Ethernet address 02:00:00:f6:1a:5f and IP address 172.16.0.1 DEBUG: Network interface has Ethernet address 02:00:00:25:55:fe and IP address 10.0.0.172 DEBUG: adding route 172.16.0.0/12 =&amp;gt; (direct) on interface 0 DEBUG: adding route 10.0.0.0/8 =&amp;gt; (direct) on interface 1 DEBUG: adding route 192.168.0.0/16 =&amp;gt; 10.0.0.192 on interface 1 DEBUG: Network interface has Ethernet address b2:3c:1d:4e:1c:2e and IP address 172.</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 6: building an IP router</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-01-19-cs144-lab6/</link>
+      <pubDate>Wed, 19 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-01-19-cs144-lab6/</guid>
+      <description>Lab6 在 Lab5 实现的 network interface 基础上，构建一个 IP 路由器。路由器有多个 network interface，并能接受任意一个 network interface 的 IP 报文。总结来说，路由器的任务就是根据路由表转发 IP 报文。
+对于给定 IP 报文，路由表负责以下任务：
+要将 IP 报文给哪一个 network interface。 下一跳的 IP 地址。 Implementing the Router Router 类可以：
+追踪路由表 将收到的 IP 报文在正确的传出网络接口(network interface)上转发给正确的下一跳 add_route 为路由表添加路由规则。
+// router.hh class Router { ... struct route_entry { uint32_t _route_prefix{}; uint8_t _prefix_length{}; std::optional&amp;lt;Address&amp;gt; _next_hop{}; size_t interface_num{}; }; std::vector&amp;lt;route_entry&amp;gt; _routes{}; ... }; // router.cc void Router::add_route(const uint32_t route_prefix, const uint8_t prefix_length, const optional&amp;lt;Address&amp;gt; next_hop, const size_t interface_num) { cerr &amp;lt;&amp;lt; &amp;#34;DEBUG: adding route &amp;#34; &amp;lt;&amp;lt; Address::from_ipv4_numeric(route_prefix).</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 5: the network interface</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-01-18-cs144-lab5/</link>
+      <pubDate>Tue, 18 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-01-18-cs144-lab5/</guid>
+      <description>在前面几个 Lab 中，我们的 TCP 实现可以保证两个主机之间传输 TCP segments，而这些片段实际是如何通过什么方式进行传输的呢？有如下三种方式：
+TCP-in-UDP-in-IP，TCP segments，通过 OS 提供接口（如 UDPSocket）构造 UDP header，IP header，Ethernet header，然后发送数据包给下一跳。OS 确保每个 socket 在连接两端的主机间有独占的地址和端口号，保证了不同应用程序之间的隔离。 TCP-in-IP，通常情况下，TCP segments 都是直接放在 IP 数据报里面，没有 TCP header 和 IP header 之间没有 UDP header，这也是通常所说的TCP/IP。OS 提供了一个接口，叫做 TUN 设备，用户直接构造 IP 报文，然后 OS 负责了其他的部分（构造 Ethernet header，并发送以太网帧）。 在 Lab4 中，tcp_helpers/ipv4 datagram.{hh,cc}表示了 IP 报文对象如何解析和构造，以及tcp_helpers/tcp_over_ip.cc如何将 TCP segments 封装成 IP 报文，CS144TCPSocket使用这些工具将 TCPConnection 连接到 TUN 设备。
+TCP-in-IP-in-Ethernet，上面的两种方法依然依赖 OS 的功能作为协议栈的一部分。每次将 IP 报文写入时，OS 都必须构造 link-layer (Ethernet 以太网)帧。因此 OS 根据给定 下一跳的 IP 地址，找到下一跳的以太网目的地址。如果不知道的话，OS 就会广播查询请求，并等待下一跳的响应。 而这些功能则是由 network interface 实现，负责 IP 报文与以太网帧之间的封装或解析。Lab5 中则将实现 network interface，生成原始的以太网帧，将其传给 TAP 设备（与 TUN 设备类似，但是更低层级，它交换以太网帧而不是 IP 报文）。</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 4: the TCP connection</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-12-28-cs144-lab4/</link>
+      <pubDate>Tue, 28 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-12-28-cs144-lab4/</guid>
+      <description>Lab 4 将前面实现的 TCPSender 和 TCPReceiver 组装成 TCPConnection。
+TCP 可靠地传输一对字节流，每一端都有 &amp;ldquo;sender&amp;rdquo; (outbound byte-stream) 和 &amp;ldquo;receiver&amp;rdquo; (inbound byte-stream)，如下图：
+TCPConnection 负责接收和发送 segments。
+实现细节 Receiving segments 接收 segment 主要包括以下几个步骤：
+如果 segment 带有 RST 标志，需要将 inbound 和 outbound stream 都设置为 error 状态。 否则的话，将 segment 传给 TCPReceiver，负责接收相关字段：seqno, SYN, payload, FIN 如果带有 ACK 标志，TCPSender 接收确认号和窗口大小，以便发送 segment。 如果 segment 至少占有一个序列号，确保至少发送回复一个 segment，将自己的 ackno 和 窗口大小告诉对等端。 考虑一个特殊情况，当连接建立的时候，接收的 segment 的 seqno 可能是非法的，也应当回应发送一个 segment 给对等端。 实现如下：
+void TCPConnection::segment_received(const TCPSegment &amp;amp;seg) { // std::cout &amp;lt;&amp;lt; &amp;#34;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;receive segment.</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 3: the TCP sender</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-12-10-cs144-lab3/</link>
+      <pubDate>Fri, 10 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-12-10-cs144-lab3/</guid>
+      <description>Lab 3 实现 TCPSender，它负责将 ByteStream 封装成 TCPSegment 发送给对等端。
+这样 TCPReceiver 接收这些 TCPSegment 序列并还原成原始的 ByteStream，并发送 acknowledgments（确认） 和 window advertisements（通告窗口）给 TCPSender。
+TCPSender 发送 TCPSegment 时，写时涉及的字段包括与 TCPReceiver 相关的所有字段：the sequence number, the SYN flag, the payload, the FIN flag。
+TCPSender 接收 TCPSegment 时，读时涉及的字段包括：the ackno, the window size。
+下图是 TCPSender 操作 TCPSegment 涉及的字段，蓝色部分是写时字段、红色部分是读时字段。
+总结 TCPSender 的任务就是：
+追踪另一端的接收方窗口，处理接收方发送过来的确认号和窗口大小。
+尽可能填充窗口，读 ByteStream，封装成 TCPSegment（可能包括 SYN 和 FIN ），发送给接收方。
+追踪发送给了接收方，但是还没有被确认的 segments，这些 segments 被称作 outstanding segments。
+如果 outstanding segments 超过一定时间还没被确认，那就重新将它发送给接收方。</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 2: the TCP receiver</title>
+      <link>https://zonepg.github.io/posts/programming/net/2021-12-01-cs144-lab2/</link>
+      <pubDate>Wed, 01 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2021-12-01-cs144-lab2/</guid>
+      <description>Lab 2 是实现 TCPReceiver，它的任务如下：
+通过 segment received() 方法接收到来的TCPSegment，这些 TCPSegments 可能是乱序、重复的。 将 TCPSegment 取出来的数据与 index，装入到 StreamReassembler 中，写入 ByteStream，ByteStream 中的字节流都是有序、正确的，因此用户就可以正确读取。 除此之外，TCPReceiver 还会将自己的确认号(ackno)和窗口大小(window size)发送出去： 确认号返回当前第一个未组装的字节序号 窗口大小就是还可以组装的字节序列长度。 Translating between 64-bit indexes and 32-bit seqnos 本地中的 StreamReassembler 和 ByteStream 字节索引都是 64 位的 stream index，保证足够了的存储空间，并且第一个字节的序号下标总是从 0 开始。但是在网络传输中使用 64 位的字节索引，数据的传输大小就十分吓人了，因此网络传输中的 TCPSegments 使用 32 位的字节索引。因此接收 TCPSegment 与发送 ackno 时，需要实现 64 位索引与 32 位索引的相互转换。引入这种转换增加了三种复杂性：
+网络传输中的字节流的 序列号(seqno) 为 $2^{32}-1$ 时，下一个字节的序列号将是 0。 数据传输时以 起始序列号(ISN, Initial Sequence Number) 开始，这是一个随机值：为了保证安全性，确保序列号不能被可猜测并且不太可能重复。同时这个序列号有 SYN(beginning of stream) 标记，表示字节流的起始位置。剩下部分的字节流的序列号将是按 ISN 的顺序，比如字节流的第一个字节的序列号将是 ISN+1 (mod $2^{32}$)，第二个字节将是 ISN+2 (mod $2^{32}$)，以此类推。 TCP 除了确保接收所有的字节数据以外，还确保接收字节流的开始和结束标记，分别是 SYN(beginning-of-stream) 和 FIN(end-of-stream)，它们各自占有一个序列号。字节流中的每个字节数据也占有一个序列号。需要注意的是，SYN 和 FIN 标记并不是字节流的一部分，它们只代表字节流的开始和结束。 强调一下，sequence number 也就是序列号在 TCPSegment 的 header 中传输；absolute sequence number 也就是绝对序列号，从 0 开始；stream index，StreamReassembler 装载数据时使用的索引，从 0 开始。下图是 &amp;ldquo;cat&amp;rdquo; 为例子，三种不同类型的 index 如下：</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 1: stitching substrings into a byte stream</title>
+      <link>https://zonepg.github.io/posts/programming/net/2021-11-30-cs144-lab1/</link>
+      <pubDate>Tue, 30 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2021-11-30-cs144-lab1/</guid>
+      <description>上图是 TCP 实现中的各个模块以及数据流动，Lab0 中已经实现了 ByteStream，TCP 的任务是在不可靠网络上传输一对可靠的 ByteStream，，保证在一端写入的数据，能够被另一端读出。
+Lab1 中，将实现一个 StreamReassembler，接收数据片段（substring）、拼装成连续的、正确的 ByteStream 序列，ByteStream 可以被读出。StreamReassembler 解决了网络传输过程中的 乱序(reordering) 与 重复(dupication)问题。
+What’s the “capacity”? push_string() 负责接收数据片段，以及该片段的 index，对于超出 &amp;ldquo;capacity&amp;rdquo; 区域的片段，将拒绝接收。&amp;ldquo;capacity&amp;rdquo; 的区域如下图所示。
+蓝色部分是已经被读出的字节流。 绿色部分是已经在 ByteStream 中，但还未被读出的字节流。 红色部分是 ByteStream 剩余的容量，也就是还可以写入的字节流大小。 这些字段的实现如下：
+size_t stream_start_index() const { return 0; } size_t first_unread_index() const { return _output.bytes_read(); } size_t first_unassemebled_index() const { return _output.bytes_written(); } size_t first_unacceptable_index() const { return _output.bytes_read() + _capacity; } 实现细节 核心部分是 push_string(const std::string &amp;amp;data, const uint64_t index, const bool eof) 方法：</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 0: networking warmup</title>
+      <link>https://zonepg.github.io/posts/programming/net/2021-11-29-cs144-lab0/</link>
+      <pubDate>Mon, 29 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2021-11-29-cs144-lab0/</guid>
+      <description>Writing a network program using an OS stream socket 我们可以通过 OS 提供的功能，创建可靠双向字节流(reliable bidirectional byte, 又称为流套接字 stream socket)。在这个热身实验中，我们通过可靠双向字节流获取网页数据。
+流套接字看起来像是普通的文件描述符，当两个流套接字连接的时候，某一方流套接字的输入最终会在另一方的流套接字中输出。
+事实上，网络传输过程中并不保证能够传输可靠的字节流，因此在传输过程中，因此数据在网络传输过程中，可能会发生如下四种问题：
+lost，丢失 delivered out of order，乱序 delivered with the contents altered，更改 duplicated and delivered more than once，重复 因此，连接两端之间的主机的 OS 通常会提供 TCP 协议，从而保证传输可靠的字节流。而在后续的 lab 中，我们将动手实现自己的 TCP 协议。
+Writing webget 这一部分我们将使用 OS 提供的 TCP 接口支持，获取网页数据，我们只需要实现 get_URL() 方法即可。
+阅读 TCPSocket 提供的方法：
+connect() 方法向一个 host 发起连接请求， write() 方法向 host 写入发送请求。 read() 方法获取 host 返回的数据。 需要注意的是：
+客户端写入请求时，每一行以 &amp;ldquo;\r\n&amp;rdquo; 结尾。 客户端写入请求时，&amp;ldquo;Connection: close&amp;rdquo;，通知服务器端不再等待客户端发送请求，并将请求的数据返回给客户端。 确保输出服务器传送过来的所有数据，仅调用一次 read() 方法是不够的。 最终实现如下：</description>
+    </item>
+    
+  </channel>
+</rss>

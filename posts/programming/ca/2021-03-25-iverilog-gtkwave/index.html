@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>轻量级Verilog仿真环境搭建iVerilog&#43;GTKWave - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="轻量级Verilog仿真环境搭建iVerilog&#43;GTKWave" />
+<meta property="og:description" content="由于体系结构课程要用到verilog来实现MIPSCPU，之前上组成原理课程与数字逻辑课程用过ModelSim与Vivado，这两软件实在是太笨重了，同学们基本都是只拿来做做仿真运行就行了，ModelSim软件bug巨多，而Vivado编译运行速度实在是一言难尽。所以在网上找了一些轻量级Verilog仿真运行方案，Icarus Verilog &#43; GTKWave似乎是一个不错的选择
+iVerilog开源、支持各平台，有语法检查，仿真，可以满足课程需求。
+这里给出Windows环境搭建，并给出我个人的食用方案。
+iVerilog 安装 iverlog，我个人下载的是iverilog-v11-20201123-x64_setup.exe [18.1MB]即可（不知道为什么2021版的突然突然44M，不过比 Vivado 10个G总舒服多了)。一路点下去，记得选中设置环境变量。
+将会安装好以下 3 个工具：
+iverlog：编译 verilog代码 vvp：将可执行文件生成仿真波形 gtkwave：打开仿真波形文件，显示波形 安装好后，可以在windows命令行中输入iverilog, vvp, gtkwave检查环境变量是否设置成功。
+食用方式 iverilog可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第三章 demo代码：
+├── pc_reg.v(PC寄存器实现) ├── rom.v(指令存储器实现) ├── rom.data(指令存储器数据) ├── inst_fetch.v(综合模块实现) ├── inst_fetch_tb.v(测试模块实现) ├── run.bat(编译运行脚本) ├── rmfile.bat(删除输出文件脚本) pc_reg.v module pc_reg(input wire clk, input wire rst, output reg[5:0] pc, output reg ce); // 指令存储器使能信号 always @(posedge clk) begin if (rst == 1&#39;b1) begin ce &lt;= 1&#39;b0; // 在复位信号有效的时候，指令存储器使能信号无效 end else begin ce &lt;= 1&#39;b1; // 复位信号无效的时候，指令存储器使能信号有效 end end always @(posedge clk) begin if (ce == 1&#39;b0) begin pc &lt;= 6&#39;h00; // 指令存储器使能信号有效时，pc保持为0 end else begin pc &lt;= pc &#43; 1&#39;b1; end end endmodule rom." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/ca/2021-03-25-iverilog-gtkwave/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-03-25T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-03-25T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="轻量级Verilog仿真环境搭建iVerilog&#43;GTKWave"/>
+<meta name="twitter:description" content="由于体系结构课程要用到verilog来实现MIPSCPU，之前上组成原理课程与数字逻辑课程用过ModelSim与Vivado，这两软件实在是太笨重了，同学们基本都是只拿来做做仿真运行就行了，ModelSim软件bug巨多，而Vivado编译运行速度实在是一言难尽。所以在网上找了一些轻量级Verilog仿真运行方案，Icarus Verilog &#43; GTKWave似乎是一个不错的选择
+iVerilog开源、支持各平台，有语法检查，仿真，可以满足课程需求。
+这里给出Windows环境搭建，并给出我个人的食用方案。
+iVerilog 安装 iverlog，我个人下载的是iverilog-v11-20201123-x64_setup.exe [18.1MB]即可（不知道为什么2021版的突然突然44M，不过比 Vivado 10个G总舒服多了)。一路点下去，记得选中设置环境变量。
+将会安装好以下 3 个工具：
+iverlog：编译 verilog代码 vvp：将可执行文件生成仿真波形 gtkwave：打开仿真波形文件，显示波形 安装好后，可以在windows命令行中输入iverilog, vvp, gtkwave检查环境变量是否设置成功。
+食用方式 iverilog可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第三章 demo代码：
+├── pc_reg.v(PC寄存器实现) ├── rom.v(指令存储器实现) ├── rom.data(指令存储器数据) ├── inst_fetch.v(综合模块实现) ├── inst_fetch_tb.v(测试模块实现) ├── run.bat(编译运行脚本) ├── rmfile.bat(删除输出文件脚本) pc_reg.v module pc_reg(input wire clk, input wire rst, output reg[5:0] pc, output reg ce); // 指令存储器使能信号 always @(posedge clk) begin if (rst == 1&#39;b1) begin ce &lt;= 1&#39;b0; // 在复位信号有效的时候，指令存储器使能信号无效 end else begin ce &lt;= 1&#39;b1; // 复位信号无效的时候，指令存储器使能信号有效 end end always @(posedge clk) begin if (ce == 1&#39;b0) begin pc &lt;= 6&#39;h00; // 指令存储器使能信号有效时，pc保持为0 end else begin pc &lt;= pc &#43; 1&#39;b1; end end endmodule rom."/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">轻量级Verilog仿真环境搭建iVerilog&#43;GTKWave</h1>
+			<div class="meta">Posted on Mar 25, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p>由于体系结构课程要用到<code>verilog</code>来实现<code>MIPS</code>CPU，之前上组成原理课程与数字逻辑课程用过<code>ModelSim</code>与<code>Vivado</code>，这两软件实在是太笨重了，同学们基本都是只拿来做做仿真运行就行了，<code>ModelSim</code>软件<code>bug</code>巨多，而<code>Vivado</code>编译运行速度实在是一言难尽。所以在网上找了一些轻量级<code>Verilog</code>仿真运行方案，<code>Icarus Verilog + GTKWave</code>似乎是一个不错的选择</p>
+<p><code>iVerilog</code>开源、支持各平台，有语法检查，仿真，可以满足课程需求。</p>
+<p>这里给出Windows环境搭建，并给出我个人的食用方案。</p>
+<h2 id="iverilog-安装">iVerilog 安装</h2>
+<p><a href="https://bleyer.org/icarus/">iverlog</a>，我个人下载的是<code>iverilog-v11-20201123-x64_setup.exe [18.1MB]</code>即可（不知道为什么2021版的突然突然44M，不过比 Vivado 10个G总舒服多了)。一路点下去，记得选中设置环境变量。</p>
+<p>将会安装好以下 3 个工具：</p>
+<ul>
+<li><code>iverlog</code>：编译 <code>verilog</code>代码</li>
+<li><code>vvp</code>：将可执行文件生成仿真波形</li>
+<li><code>gtkwave</code>：打开仿真波形文件，显示波形</li>
+</ul>
+<p>安装好后，可以在windows命令行中输入<code>iverilog</code>, <code>vvp</code>, <code>gtkwave</code>检查环境变量是否设置成功。</p>
+<h2 id="食用方式">食用方式</h2>
+<p><code>iverilog</code>可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第三章 demo代码：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>├── pc_reg.v(PC寄存器实现)
+</span></span><span style="display:flex;"><span>├── rom.v(指令存储器实现)
+</span></span><span style="display:flex;"><span>├── rom.data(指令存储器数据)
+</span></span><span style="display:flex;"><span>├── inst_fetch.v(综合模块实现)
+</span></span><span style="display:flex;"><span>├── inst_fetch_tb.v(测试模块实现)
+</span></span><span style="display:flex;"><span>├── run.bat(编译运行脚本)
+</span></span><span style="display:flex;"><span>├── rmfile.bat(删除输出文件脚本)
+</span></span></code></pre></div><ul>
+<li><code>pc_reg.v</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-verilog" data-lang="verilog"><span style="display:flex;"><span><span style="color:#66d9ef">module</span> pc_reg(<span style="color:#66d9ef">input</span> <span style="color:#66d9ef">wire</span> clk,
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">input</span> <span style="color:#66d9ef">wire</span> rst,
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">output</span> <span style="color:#66d9ef">reg</span>[<span style="color:#ae81ff">5</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>] pc,
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">output</span> <span style="color:#66d9ef">reg</span> ce); <span style="color:#75715e">// 指令存储器使能信号
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">always</span> @(<span style="color:#66d9ef">posedge</span> clk) <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (rst <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b1</span>) <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>            ce <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b0</span>; <span style="color:#75715e">// 在复位信号有效的时候，指令存储器使能信号无效
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">end</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>            ce <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b1</span>; <span style="color:#75715e">// 复位信号无效的时候，指令存储器使能信号有效
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">always</span> @(<span style="color:#66d9ef">posedge</span> clk) <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (ce <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b0</span>) <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>            pc <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">6&#39;h00</span>;    <span style="color:#75715e">// 指令存储器使能信号有效时，pc保持为0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">end</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>            pc <span style="color:#f92672">&lt;=</span> pc <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b1</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">endmodule</span>
+</span></span></code></pre></div><ul>
+<li><code>rom.v</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-verilog" data-lang="verilog"><span style="display:flex;"><span><span style="color:#66d9ef">module</span> rom (<span style="color:#66d9ef">input</span> <span style="color:#66d9ef">wire</span> ce,
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">input</span> <span style="color:#66d9ef">wire</span>[<span style="color:#ae81ff">5</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>] addr,   <span style="color:#75715e">// 要读取的指令地址
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">output</span> <span style="color:#66d9ef">reg</span>[<span style="color:#ae81ff">31</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>] inst); <span style="color:#75715e">// 读出的指令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">reg</span>[<span style="color:#ae81ff">31</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>] rom[<span style="color:#ae81ff">63</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">initial</span> <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>        $readmemh(<span style="color:#e6db74">&#34;rom.data&#34;</span>, rom);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">always</span> @(<span style="color:#f92672">*</span>) <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (ce <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b0</span>) <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>            inst <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">32&#39;h0</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">end</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>            inst <span style="color:#f92672">&lt;=</span> rom[addr];
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">endmodule</span>
+</span></span></code></pre></div><ul>
+<li><code>rom.data</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>01010101
+</span></span><span style="display:flex;"><span>02020202
+</span></span><span style="display:flex;"><span>03030303
+</span></span><span style="display:flex;"><span>04040404
+</span></span></code></pre></div><ul>
+<li><code>inst_fetch.v</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-verilog" data-lang="verilog"><span style="display:flex;"><span><span style="color:#66d9ef">module</span> inst_fetch (<span style="color:#66d9ef">input</span> <span style="color:#66d9ef">wire</span> clk,
+</span></span><span style="display:flex;"><span>                   <span style="color:#66d9ef">input</span> <span style="color:#66d9ef">wire</span> rst,
+</span></span><span style="display:flex;"><span>                   <span style="color:#66d9ef">output</span> <span style="color:#66d9ef">wire</span>[<span style="color:#ae81ff">31</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>] inst_o);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">wire</span>[<span style="color:#ae81ff">5</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>] pc;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">wire</span> rom_ce;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// PC 模块的实例化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    pc_reg pc_reg0(.clk(clk), .rst(rst), .pc(pc), .ce(rom_ce));
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 指令存储器ROM的实例化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    rom rom0(.ce(rom_ce), .addr(pc), .inst(inst_o));
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">endmodule</span>
+</span></span></code></pre></div><ul>
+<li><code>inst_fetch_tb.v</code>：注意所有的测试文件中都要加这段代码，以便iVerilog编译。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>/*iverilog */
+</span></span><span style="display:flex;"><span>initial
+</span></span><span style="display:flex;"><span>begin            
+</span></span><span style="display:flex;"><span>    $dumpfile(&#34;wave.vcd&#34;);        //生成的vcd文件名称
+</span></span><span style="display:flex;"><span>    $dumpvars(0, inst_fetch_tb);    //tb模块名称
+</span></span><span style="display:flex;"><span>end
+</span></span><span style="display:flex;"><span>/*iverilog */
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-verilog" data-lang="verilog"><span style="display:flex;"><span><span style="color:#66d9ef">module</span> inst_fetch_tb;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/*iverilog */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">initial</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">begin</span>            
+</span></span><span style="display:flex;"><span>        $dumpfile(<span style="color:#e6db74">&#34;wave.vcd&#34;</span>);        <span style="color:#75715e">//生成的vcd文件名称
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        $dumpvars(<span style="color:#ae81ff">0</span>, inst_fetch_tb);    <span style="color:#75715e">//tb模块名称
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/*iverilog */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 第一段：数据说明
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">reg</span> clk;    <span style="color:#75715e">// 激励信号 clk
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">reg</span> rst;    <span style="color:#75715e">// 激励信号 rst
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">wire</span>[<span style="color:#ae81ff">31</span><span style="color:#f92672">:</span><span style="color:#ae81ff">0</span>] inst; <span style="color:#75715e">// 显示信号 inst, 取出的指令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 第二段：激励向量定义
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 定义 clk，每隔 10 个时间单位，翻转，即 50 MHz的时钟
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 仿真的时候，一个时间单位默认是 1ns
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">initial</span> <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>        clk <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b0</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">forever</span> <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>            #<span style="color:#ae81ff">10</span> clk <span style="color:#f92672">=</span> <span style="color:#f92672">~</span>clk;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 定义 rst 信号，最开始为 1，复位有效，过了 195个时间单位
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 设置 rst 信号的值为0， 复位信号无效，复位结束，再运行1000ns，暂停仿真
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">initial</span> <span style="color:#66d9ef">begin</span>
+</span></span><span style="display:flex;"><span>        rst <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b1</span>;
+</span></span><span style="display:flex;"><span>        #<span style="color:#ae81ff">195</span> rst <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#ae81ff">&#39;b0</span>;
+</span></span><span style="display:flex;"><span>        #<span style="color:#ae81ff">1000</span> $stop;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">end</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 第三段：待测试模块实例化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    inst_fetch inst_fetch0(
+</span></span><span style="display:flex;"><span>        .clk(clk),
+</span></span><span style="display:flex;"><span>        .rst(rst),
+</span></span><span style="display:flex;"><span>        .inst_o(inst)
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">endmodule</span>
+</span></span></code></pre></div><ul>
+<li><code>run.bat</code>: 这是一个简单的编译运行批处理脚本，这三个工具还有各种参数，后续再探索</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-batch" data-lang="batch"><span style="display:flex;"><span>% Start compiling %
+</span></span><span style="display:flex;"><span>iverilog -o wave %*
+</span></span><span style="display:flex;"><span>% Generating wave file %
+</span></span><span style="display:flex;"><span>vvp -n wave -lxt2
+</span></span><span style="display:flex;"><span>% Opening wave file %
+</span></span><span style="display:flex;"><span>gtkwave wave.vcd
+</span></span></code></pre></div><ul>
+<li><code>rmfile.bat</code>: 删除生成的文件，方便重新编译</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-batch" data-lang="batch"><span style="display:flex;"><span><span style="color:#66d9ef">del</span> wave *.vcd
+</span></span></code></pre></div><h3 id="编译运行仿真">编译运行仿真</h3>
+<p>命令行输入<code>.\run.bat file1 file2</code>即可，这里是<code>.\run.bat .\inst_fetch_tb.v .\inst_fetch.v .\pc_reg.v .\rom.v </code></p>
+<figure><img src="/ca/2021-03-05-iverilog-gtkwave/iverilog-gtkwave.png"/><figcaption>
+            <h4>运行结果</h4>
+        </figcaption>
+</figure>
+
+<p><code>Insert</code>=&gt;<code>Signals</code>选中信号，即可显示波形，鼠标滚轮移动波形时序位置。</p>
+<h2 id="后记">后记</h2>
+<p>目前发现在我的机器上，verilog的数组不能开太大了，大概只能承受 4K 左右的大小，否则编译会卡住</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/95081329">全平台轻量开源verilog仿真工具iverilog+GTKWave使用教程</a></li>
+<li>《自己动手写CPU》第三章</li>
+</ul>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/verilog">Verilog</a></li>
+					
+					<li><a href="/tags/computer-architecture">Computer Architecture</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

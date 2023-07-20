@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on ZonePG</title>
+    <link>https://zonepg.github.io/posts/</link>
+    <description>Recent content in Posts on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Tue, 01 Mar 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Scheme 解释器中尾递归优化的实现</title>
+      <link>https://zonepg.github.io/posts/programming/pl/2022-03-01-tail-recursion-optimization/</link>
+      <pubDate>Tue, 01 Mar 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/pl/2022-03-01-tail-recursion-optimization/</guid>
+      <description>这是 CS61A 2020 fall Project4 的 PROBLEM 19，优化 Scheme 解释器的尾递归程序。
+为什么要优化尾递归程序 以 factorial 为例子，python 编写的递归、迭代版本实现如下：
+# tail-recursion def factorial_recursion(n, k): if n == 0: return k else: return factorial(n - 1, k * n) # iteration def factorial_iteration(n, k): while n &amp;gt; 0: n, k = n - 1, k * n return k 其中，它们的时间复杂度均为 O(n)，迭代的时间复杂度为 O(1)，而递归版本的空间复杂度尾 O(n)，因为 n 次调用需要 n 个栈帧保存程序参数变量。
+因此如果调用factorial_recursion(1000, 1)会因为超过最大递归深度（空间复杂度太大）而导致我们所说的爆栈，factorial_iteration则不会，因为它的空间复杂度是常量。
+实际上，factorial_recursion每一次递归调用时，可以丢弃上一次调用的栈帧，从而达到与迭代版本一样的常量空间复杂度的效果。
+比如，factorial_recursion(1000, 1) 调用 factorial_recursion(999, 1000 * 1)，实际上已经将变量保存到第二次调用的栈帧的变量k中，上一次的栈帧我们不需要再保留。最后，只需要返回最后一次递归调用的 k 即可。可以发现，其实这样的思想就迭代。</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 7: putting it all together</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-01-20-cs144-lab7/</link>
+      <pubDate>Thu, 20 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-01-20-cs144-lab7/</guid>
+      <description>Lab7 不需要写任何代码，这一部分验证我们前面 Lab 所有实现的正确性。
+The Network 如下图，Lab7 build/app/lab7为我们构建了这样一个网络。
+server 执行./apps/lab7 server cs144.keithw.org 3000，输出如下： ❯ ./apps/lab7 server cs144.keithw.org 3000 DEBUG: Network interface has Ethernet address 02:00:00:f6:1a:5f and IP address 172.16.0.1 DEBUG: Network interface has Ethernet address 02:00:00:25:55:fe and IP address 10.0.0.172 DEBUG: adding route 172.16.0.0/12 =&amp;gt; (direct) on interface 0 DEBUG: adding route 10.0.0.0/8 =&amp;gt; (direct) on interface 1 DEBUG: adding route 192.168.0.0/16 =&amp;gt; 10.0.0.192 on interface 1 DEBUG: Network interface has Ethernet address b2:3c:1d:4e:1c:2e and IP address 172.</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 6: building an IP router</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-01-19-cs144-lab6/</link>
+      <pubDate>Wed, 19 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-01-19-cs144-lab6/</guid>
+      <description>Lab6 在 Lab5 实现的 network interface 基础上，构建一个 IP 路由器。路由器有多个 network interface，并能接受任意一个 network interface 的 IP 报文。总结来说，路由器的任务就是根据路由表转发 IP 报文。
+对于给定 IP 报文，路由表负责以下任务：
+要将 IP 报文给哪一个 network interface。 下一跳的 IP 地址。 Implementing the Router Router 类可以：
+追踪路由表 将收到的 IP 报文在正确的传出网络接口(network interface)上转发给正确的下一跳 add_route 为路由表添加路由规则。
+// router.hh class Router { ... struct route_entry { uint32_t _route_prefix{}; uint8_t _prefix_length{}; std::optional&amp;lt;Address&amp;gt; _next_hop{}; size_t interface_num{}; }; std::vector&amp;lt;route_entry&amp;gt; _routes{}; ... }; // router.cc void Router::add_route(const uint32_t route_prefix, const uint8_t prefix_length, const optional&amp;lt;Address&amp;gt; next_hop, const size_t interface_num) { cerr &amp;lt;&amp;lt; &amp;#34;DEBUG: adding route &amp;#34; &amp;lt;&amp;lt; Address::from_ipv4_numeric(route_prefix).</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 5: the network interface</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-01-18-cs144-lab5/</link>
+      <pubDate>Tue, 18 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-01-18-cs144-lab5/</guid>
+      <description>在前面几个 Lab 中，我们的 TCP 实现可以保证两个主机之间传输 TCP segments，而这些片段实际是如何通过什么方式进行传输的呢？有如下三种方式：
+TCP-in-UDP-in-IP，TCP segments，通过 OS 提供接口（如 UDPSocket）构造 UDP header，IP header，Ethernet header，然后发送数据包给下一跳。OS 确保每个 socket 在连接两端的主机间有独占的地址和端口号，保证了不同应用程序之间的隔离。 TCP-in-IP，通常情况下，TCP segments 都是直接放在 IP 数据报里面，没有 TCP header 和 IP header 之间没有 UDP header，这也是通常所说的TCP/IP。OS 提供了一个接口，叫做 TUN 设备，用户直接构造 IP 报文，然后 OS 负责了其他的部分（构造 Ethernet header，并发送以太网帧）。 在 Lab4 中，tcp_helpers/ipv4 datagram.{hh,cc}表示了 IP 报文对象如何解析和构造，以及tcp_helpers/tcp_over_ip.cc如何将 TCP segments 封装成 IP 报文，CS144TCPSocket使用这些工具将 TCPConnection 连接到 TUN 设备。
+TCP-in-IP-in-Ethernet，上面的两种方法依然依赖 OS 的功能作为协议栈的一部分。每次将 IP 报文写入时，OS 都必须构造 link-layer (Ethernet 以太网)帧。因此 OS 根据给定 下一跳的 IP 地址，找到下一跳的以太网目的地址。如果不知道的话，OS 就会广播查询请求，并等待下一跳的响应。 而这些功能则是由 network interface 实现，负责 IP 报文与以太网帧之间的封装或解析。Lab5 中则将实现 network interface，生成原始的以太网帧，将其传给 TAP 设备（与 TUN 设备类似，但是更低层级，它交换以太网帧而不是 IP 报文）。</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 4: the TCP connection</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-12-28-cs144-lab4/</link>
+      <pubDate>Tue, 28 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-12-28-cs144-lab4/</guid>
+      <description>Lab 4 将前面实现的 TCPSender 和 TCPReceiver 组装成 TCPConnection。
+TCP 可靠地传输一对字节流，每一端都有 &amp;ldquo;sender&amp;rdquo; (outbound byte-stream) 和 &amp;ldquo;receiver&amp;rdquo; (inbound byte-stream)，如下图：
+TCPConnection 负责接收和发送 segments。
+实现细节 Receiving segments 接收 segment 主要包括以下几个步骤：
+如果 segment 带有 RST 标志，需要将 inbound 和 outbound stream 都设置为 error 状态。 否则的话，将 segment 传给 TCPReceiver，负责接收相关字段：seqno, SYN, payload, FIN 如果带有 ACK 标志，TCPSender 接收确认号和窗口大小，以便发送 segment。 如果 segment 至少占有一个序列号，确保至少发送回复一个 segment，将自己的 ackno 和 窗口大小告诉对等端。 考虑一个特殊情况，当连接建立的时候，接收的 segment 的 seqno 可能是非法的，也应当回应发送一个 segment 给对等端。 实现如下：
+void TCPConnection::segment_received(const TCPSegment &amp;amp;seg) { // std::cout &amp;lt;&amp;lt; &amp;#34;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;receive segment.</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 3: the TCP sender</title>
+      <link>https://zonepg.github.io/posts/programming/net/2022-12-10-cs144-lab3/</link>
+      <pubDate>Fri, 10 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2022-12-10-cs144-lab3/</guid>
+      <description>Lab 3 实现 TCPSender，它负责将 ByteStream 封装成 TCPSegment 发送给对等端。
+这样 TCPReceiver 接收这些 TCPSegment 序列并还原成原始的 ByteStream，并发送 acknowledgments（确认） 和 window advertisements（通告窗口）给 TCPSender。
+TCPSender 发送 TCPSegment 时，写时涉及的字段包括与 TCPReceiver 相关的所有字段：the sequence number, the SYN flag, the payload, the FIN flag。
+TCPSender 接收 TCPSegment 时，读时涉及的字段包括：the ackno, the window size。
+下图是 TCPSender 操作 TCPSegment 涉及的字段，蓝色部分是写时字段、红色部分是读时字段。
+总结 TCPSender 的任务就是：
+追踪另一端的接收方窗口，处理接收方发送过来的确认号和窗口大小。
+尽可能填充窗口，读 ByteStream，封装成 TCPSegment（可能包括 SYN 和 FIN ），发送给接收方。
+追踪发送给了接收方，但是还没有被确认的 segments，这些 segments 被称作 outstanding segments。
+如果 outstanding segments 超过一定时间还没被确认，那就重新将它发送给接收方。</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 2: the TCP receiver</title>
+      <link>https://zonepg.github.io/posts/programming/net/2021-12-01-cs144-lab2/</link>
+      <pubDate>Wed, 01 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2021-12-01-cs144-lab2/</guid>
+      <description>Lab 2 是实现 TCPReceiver，它的任务如下：
+通过 segment received() 方法接收到来的TCPSegment，这些 TCPSegments 可能是乱序、重复的。 将 TCPSegment 取出来的数据与 index，装入到 StreamReassembler 中，写入 ByteStream，ByteStream 中的字节流都是有序、正确的，因此用户就可以正确读取。 除此之外，TCPReceiver 还会将自己的确认号(ackno)和窗口大小(window size)发送出去： 确认号返回当前第一个未组装的字节序号 窗口大小就是还可以组装的字节序列长度。 Translating between 64-bit indexes and 32-bit seqnos 本地中的 StreamReassembler 和 ByteStream 字节索引都是 64 位的 stream index，保证足够了的存储空间，并且第一个字节的序号下标总是从 0 开始。但是在网络传输中使用 64 位的字节索引，数据的传输大小就十分吓人了，因此网络传输中的 TCPSegments 使用 32 位的字节索引。因此接收 TCPSegment 与发送 ackno 时，需要实现 64 位索引与 32 位索引的相互转换。引入这种转换增加了三种复杂性：
+网络传输中的字节流的 序列号(seqno) 为 $2^{32}-1$ 时，下一个字节的序列号将是 0。 数据传输时以 起始序列号(ISN, Initial Sequence Number) 开始，这是一个随机值：为了保证安全性，确保序列号不能被可猜测并且不太可能重复。同时这个序列号有 SYN(beginning of stream) 标记，表示字节流的起始位置。剩下部分的字节流的序列号将是按 ISN 的顺序，比如字节流的第一个字节的序列号将是 ISN+1 (mod $2^{32}$)，第二个字节将是 ISN+2 (mod $2^{32}$)，以此类推。 TCP 除了确保接收所有的字节数据以外，还确保接收字节流的开始和结束标记，分别是 SYN(beginning-of-stream) 和 FIN(end-of-stream)，它们各自占有一个序列号。字节流中的每个字节数据也占有一个序列号。需要注意的是，SYN 和 FIN 标记并不是字节流的一部分，它们只代表字节流的开始和结束。 强调一下，sequence number 也就是序列号在 TCPSegment 的 header 中传输；absolute sequence number 也就是绝对序列号，从 0 开始；stream index，StreamReassembler 装载数据时使用的索引，从 0 开始。下图是 &amp;ldquo;cat&amp;rdquo; 为例子，三种不同类型的 index 如下：</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 1: stitching substrings into a byte stream</title>
+      <link>https://zonepg.github.io/posts/programming/net/2021-11-30-cs144-lab1/</link>
+      <pubDate>Tue, 30 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2021-11-30-cs144-lab1/</guid>
+      <description>上图是 TCP 实现中的各个模块以及数据流动，Lab0 中已经实现了 ByteStream，TCP 的任务是在不可靠网络上传输一对可靠的 ByteStream，，保证在一端写入的数据，能够被另一端读出。
+Lab1 中，将实现一个 StreamReassembler，接收数据片段（substring）、拼装成连续的、正确的 ByteStream 序列，ByteStream 可以被读出。StreamReassembler 解决了网络传输过程中的 乱序(reordering) 与 重复(dupication)问题。
+What’s the “capacity”? push_string() 负责接收数据片段，以及该片段的 index，对于超出 &amp;ldquo;capacity&amp;rdquo; 区域的片段，将拒绝接收。&amp;ldquo;capacity&amp;rdquo; 的区域如下图所示。
+蓝色部分是已经被读出的字节流。 绿色部分是已经在 ByteStream 中，但还未被读出的字节流。 红色部分是 ByteStream 剩余的容量，也就是还可以写入的字节流大小。 这些字段的实现如下：
+size_t stream_start_index() const { return 0; } size_t first_unread_index() const { return _output.bytes_read(); } size_t first_unassemebled_index() const { return _output.bytes_written(); } size_t first_unacceptable_index() const { return _output.bytes_read() + _capacity; } 实现细节 核心部分是 push_string(const std::string &amp;amp;data, const uint64_t index, const bool eof) 方法：</description>
+    </item>
+    
+    <item>
+      <title>CS144 Lab Checkpoint 0: networking warmup</title>
+      <link>https://zonepg.github.io/posts/programming/net/2021-11-29-cs144-lab0/</link>
+      <pubDate>Mon, 29 Nov 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/net/2021-11-29-cs144-lab0/</guid>
+      <description>Writing a network program using an OS stream socket 我们可以通过 OS 提供的功能，创建可靠双向字节流(reliable bidirectional byte, 又称为流套接字 stream socket)。在这个热身实验中，我们通过可靠双向字节流获取网页数据。
+流套接字看起来像是普通的文件描述符，当两个流套接字连接的时候，某一方流套接字的输入最终会在另一方的流套接字中输出。
+事实上，网络传输过程中并不保证能够传输可靠的字节流，因此在传输过程中，因此数据在网络传输过程中，可能会发生如下四种问题：
+lost，丢失 delivered out of order，乱序 delivered with the contents altered，更改 duplicated and delivered more than once，重复 因此，连接两端之间的主机的 OS 通常会提供 TCP 协议，从而保证传输可靠的字节流。而在后续的 lab 中，我们将动手实现自己的 TCP 协议。
+Writing webget 这一部分我们将使用 OS 提供的 TCP 接口支持，获取网页数据，我们只需要实现 get_URL() 方法即可。
+阅读 TCPSocket 提供的方法：
+connect() 方法向一个 host 发起连接请求， write() 方法向 host 写入发送请求。 read() 方法获取 host 返回的数据。 需要注意的是：
+客户端写入请求时，每一行以 &amp;ldquo;\r\n&amp;rdquo; 结尾。 客户端写入请求时，&amp;ldquo;Connection: close&amp;rdquo;，通知服务器端不再等待客户端发送请求，并将请求的数据返回给客户端。 确保输出服务器传送过来的所有数据，仅调用一次 read() 方法是不够的。 最终实现如下：</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #3 - Query Execution</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-29-cmu-15-445-db-project3/</link>
+      <pubDate>Sun, 29 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-29-cmu-15-445-db-project3/</guid>
+      <description>这一部分实现是使用课堂所讲的Volcano model，支持qeury execution。每个qeury plan都实现了一个Next方法，通过该方法来检索操作tuple。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+TASK #1 - SYSTEM CATALOG 这一部分是实现System catalog的一些接口。
+CreateTable(Transaction *txn, const std::string &amp;amp;table_name, const Schema &amp;amp;schema): 更新names_, tables_字段。 GetTable(const std::string &amp;amp;table_name), GetTable(table_oid_t table_oid): 通过相应参数获取表。 CreateIndex(txn, index_name, table_name, schema, key_schema key_attrs, keysize): 根据表建立索引，更新index_names_, indexes_字段。 GetIndex(const std::string &amp;amp;index_name, const std::string &amp;amp;table_name), GetIndex(index_oid_t index_oid): 通过参数获取索引。 GetTableIndexes(const std::string &amp;amp;table_name): 获取表的所有索引信息。 TASK #2 - EXECUTORS 这一部分实现excutor，包括sequential scans, index scans, inserts, updates, deletes, nested loop joins, nested index joins, limits with offset, aggregations。</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #2 - B&#43;TREE</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-12-cmu-15-445-db-project2/</link>
+      <pubDate>Wed, 18 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-12-cmu-15-445-db-project2/</guid>
+      <description>这一部分前前后后做了两周，到目前为止仍然有个并发的 bug 没有解决，没有拿到满分，准备先去去完成后面的内容回来再来看看。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+Checkpoint 1 TASK #1 - B+TREE PAGES 这一部分大都是补全Get, Set函数即可。
+需要注意的是，其中 GetSize() 就是 k-v 对数，根据 ppt 来看，对于一个page来说，能装的最多有效k-v 对数也就是 max_size - 1对。
+对于 internal_page 来说，第一个 key 也就是 array[0].first 是非法的 key，但是它的 value 是有效的，在计算 size 时我们仍然给它算作一对 k-v，它的 value 也就是 array[0].second 就是它孩子的page_id 对于 leaf_page 来说，真正的 value 直接保存在 array[0].second 中，所以第一个 key(array[0]) 是有效的。 对于 GetMinSize() 也需要注意如下几点。
+如果当前结点是根结点 如果根结点是叶子结点，那么它的 min_size 就是 1，表示没有有效的 key。 如果根结点是internal page，那么它的 min_size 就是 2，需要至少一个有效的 key 来 route 到叶子结点。 如果不是根结点 是 inernal_page，那么 min_size 是 (max_size + 1) / 2 是 leaf_page，那么 min_size 是 max_size / 2 以 max_size = 3 为例子，那么 leaf_page 的 min_size 就是 1，internal_page 的 min_size 就是2</description>
+    </item>
+    
+    <item>
+      <title>tmux 常用命令</title>
+      <link>https://zonepg.github.io/posts/programming/tools/2021-08-11-tmux-use/</link>
+      <pubDate>Wed, 11 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/tools/2021-08-11-tmux-use/</guid>
+      <description>记录一下 tmux 常用命令。
+我使用的是 oh my tmux 的默认配置。
+ctrl+b+?可以查看一些命令帮助。
+会话(session)管理 新建会话：tmux new -s &amp;lt;session-name&amp;gt; 退出会话（会话仍然后台运行）：ctrl+b+d 列出会话：tmux ls 连接会话：tmux attach -t &amp;lt;session-name&amp;gt; 杀死会话：tmux kill-session -t &amp;lt;session-name&amp;gt; 切换会话：ctrl+b+s, ctrl+b+w 重新命名当前会话：ctrl+b+$ 窗口(window)管理 新建窗口：ctrl+b+c 切换窗口：ctrl+b+&amp;lt;window-num&amp;gt;, ctrl+b+h/l 退出当前窗口：ctrl+b+&amp;amp; exit 重新命名当前窗口：ctrl+b+, 窗格(pane)管理 划分上下窗格：ctrl+b+- 划分左右窗格：ctrl+b+_ 移动窗格：ctrl+b+ h/j/k/l 当前窗格与上一个窗格交换位置：ctrl+b+{ 当前窗格与下一个窗格交换位置：ctrl+b+} 关闭当前窗格：ctrl+b+x 当前窗格独立显示：ctrl+b+z </description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #1 - Buffer Pool</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-06-cmu-15-445-db-project1/</link>
+      <pubDate>Fri, 06 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-06-cmu-15-445-db-project1/</guid>
+      <description>记录一下完成 Project #1 的主要思路及踩过的坑。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+LRU Replacement Policy 做过leetcode-146. LRU 缓存机制，可以直接用 hash_map 与 双链表实现，保证操作 O(1) 时间复杂度。 不过这里这里我们可以借用标准库 std::unorder_map, std::list 实现即可。
+Victim, Pin, Unpin操作，直接面向测试用例编程，上传 gradescope 一遍过。
+需要注意的是，LRU存放的都是 Unpin 的 frame_id，同时 Unpin 并不会更新 frame_id 在 LRU 中的位置，
+LRU 供 Buffer Pool 调用，当 Buffer Pool 的 free_list_ 为空时，LRU Vicitm 驱除出来一个 frame_id，这样就可以写入 page 了。
+Pin 直接将 frame_id 从 LRU 删除，说明有线程正在使用 frame_id 上的 page，直接将 frame_id 删除可以保证不会获取到 frame_id 上的 page，这样也就无法对该 page 进行操作了，达到了 Pin 的目的。
+Buffer Pool 首先对 Buffer Pool 中的一些成员进行解释。</description>
+    </item>
+    
+    <item>
+      <title>CMU 15-445/645 PROJECT #0 - C&#43;&#43; PRIMER</title>
+      <link>https://zonepg.github.io/posts/programming/db/2021-08-04-cmu-15-445-db-project0/</link>
+      <pubDate>Wed, 04 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/db/2021-08-04-cmu-15-445-db-project0/</guid>
+      <description>记录一下完成 Project #0 的主要思路。
+这部分实验目的是熟悉 c++11 内容。
+遵循Andy Pavlo要求，代码存放在私有仓库。
+环境搭建 按着 bustub README.md文档来就好。
+Matrix 为 linear 分配内存，记得初始化赋值为 0。 析构函数函数释放内存。 RowMatrix 为 data_ 分配 T* 数组，将 linear 指针值直接赋值给 data_[i]指针，这样可以共享内存。 也可以为data_[i]分配内存，相应赋值，但是这样就不是共享内存了。 共享内存的话，析构函数只需要释放 data_ 就可以了，父类会自动析构；创建新内存的话，先要释放data_[i]的内存。 RowMatrixOperations 判断运算矩阵纬度是否相等 </description>
+    </item>
+    
+    <item>
+      <title>解决 M1 MAC 的 Qemu 使用问题</title>
+      <link>https://zonepg.github.io/posts/programming/os/2021-06-29-m1-mac-qemu/</link>
+      <pubDate>Tue, 29 Jun 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/os/2021-06-29-m1-mac-qemu/</guid>
+      <description>本文可以帮助在M1 MAC上搭建起riscv32-system-qemu或riscv64-system-qemu的环境，不过仅适用与5.1.0版本的Qemu。
+[2021-11-26] 更新 6.1+ 版本的 Qemu 已解决该问题。
+问题重现 M1 Mac拿到手几个月内，因为一些软件的架构适配问题，十分头疼，其中包括Qemu的使用问题。
+例如我在Github MIT 的 xv6 仓库提的一个issue， 当使用5.x.0以及6.0.0版本的Qemu会出现这样的情况：qemu-system-riscv64: qemu_mprotect__osdep: mprotect failed: Permission denied， 其原因可能是苹果的内存保护问题。
+也尝试了rCore-Tutorial-Book-v3仓库的解决方案(issue)， 使用最新的补丁版本Qemu仓库，并对util/osdep.c文件作修改，虽然没有出现上面了情况了，系统启动会卡住。 以及 Qemu-5.2.0 不支持 RustSBI。
+解决方案 google 了多方资料，最终发现了一个暂时可行的解决方案，如下方式可以在 M1 Mac上跑起来 Qemu。
+下载 5.1.0 版本的 Qemu（6.0.0 打补丁后仍有问题） 下载这个补丁patch(series)，将其存放于Qemu的上级目录，patch -p1 &amp;lt; ../patch/v2-tcg-Fix-execution-on-Apple-Silicon.patch安装补丁。 修改util/osdep.c文件的函数 int qemu_mprotect_none(void *addr, size_t size) { #ifdef _WIN32 return qemu_mprotect__osdep(addr, size, PAGE_NOACCESS); #elif defined(__APPLE__) &amp;amp;&amp;amp; defined(__arm64__) /* Workaround mprotect (RWX-&amp;gt;NONE) issue on Big Sur 11.2 */ return 0; #else return qemu_mprotect__osdep(addr, size, PROT_NONE); 最后安装编译安装Qeme，并将build文件夹与build/riscv64-softmmu文件夹加入环境变量中 mkdir build &amp;amp;&amp;amp; cd build .</description>
+    </item>
+    
+    <item>
+      <title>轻量、快速的zsh</title>
+      <link>https://zonepg.github.io/posts/programming/tools/2021-05-19-zsh-config/</link>
+      <pubDate>Wed, 19 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/tools/2021-05-19-zsh-config/</guid>
+      <description>之前有过在 ubuntu 折腾 zsh 的经历，使用 oh-my-zsh，这种比较笨重的框架用起来有点卡卡的，遂明确自己的需求，自己动手找了解决方案。
+自己的需求是一个轻量、快速、美观的 shell，功能包括以下：
+支持 vim 配色优雅、好看 展示 git 分支信息 补全、提示 搜索 将 zsh 稍加配置，最终效果如下：
+最终效果图 vim 支持 在 .zshrc 中加入以下配置，可以让你的 zsh 支持vim，这里同时使光标在不同编辑模式下显示不用效果，以及 tab 切换补全。
+# Basic auto/tab complete: autoload -U compinit zstyle &amp;#39;:completion:*&amp;#39; menu select zmodload zsh/complist compinit _comp_options+=(globdots)	# Include hidden files. # vi mode bindkey -v export KEYTIMEOUT=1 # Use vim keys in tab complete menu: bindkey -M menuselect &amp;#39;h&amp;#39; vi-backward-char bindkey -M menuselect &amp;#39;k&amp;#39; vi-up-line-or-history bindkey -M menuselect &amp;#39;l&amp;#39; vi-forward-char bindkey -M menuselect &amp;#39;j&amp;#39; vi-down-line-or-history # Change cursor shape for different vi modes.</description>
+    </item>
+    
+    <item>
+      <title>chcore 环境搭建(WSL2)</title>
+      <link>https://zonepg.github.io/posts/programming/os/2021-04-20-chcore-setup/</link>
+      <pubDate>Mon, 19 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/os/2021-04-20-chcore-setup/</guid>
+      <description>课程主页实验资料的虚拟机镜像打不开，无法下载，故选择自己用 WSL2 Ubuntu20.04(当然虚拟机的Ubuntu20.04或者直接系统，应该也没问题) 搭建 x86 运行的 ARM 环境。(由于网络环境限制，部分过程需要科学上网)
+WSL2 下载 Docker curl -fsSL https://get.docker.com -o get-docker.sh sudo sh get-docker.sh sudo service docker start # 启动 docker, 关闭 docker 为 stop 安装交叉编译工具链 chcore的交叉编译工具链已经用 docker 封装好了，我们只需要下载镜像即可
+sudo docker pull ipads/chcore_builder:v1.0 Qemu 模拟器安装 我的使用的是 Qemu 5.0.0 版本，首先安装依赖包，并手动编译
+sudo apt install autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev \ gawk build-essential bison flex texinfo gperf libtool patchutils bc \ zlib1g-dev libexpat-dev pkg-config libglib2.0-dev libpixman-1-dev git tmux python3 wget https://download.</description>
+    </item>
+    
+    <item>
+      <title>ScoreBoard and Tomasulo Alogorithm</title>
+      <link>https://zonepg.github.io/posts/programming/ca/2021-04-15-scoreboarding-tomasulo/</link>
+      <pubDate>Thu, 15 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/ca/2021-04-15-scoreboarding-tomasulo/</guid>
+      <description>ScoreBoard 和 Tomasulo 算法是体系结构中 指令级并行(ILP: Instruction Level Parallelism) 内容必磕的两个算法。
+ScoreBoard Algorithm 记分板体系结构 首先让我们看一看 ScoreBoard 的三个部件：
+Instruction status: which of 4 steps the instruction is in Instruction status Functional unit status: Indicates the state of the functional unit (FU). 9 fields for each functional unit Busy—Indicates whether the unit is busy or not Op—Operation to perform in the unit (e.g., + or –) Fi—Destination register Fj, Fk—Source-register numbers Qj, Qk—Functional units producing source registers Fj, Fk (理解为 Fj，Fk 在 Register result status 中的 functional unit，即某个 functional unit 占用 Fj 或者 Fk) Rj, Rk—Flags indicating when Fj, Fk are ready Functional unit status Register result status—Indicates which functional unit will write each register, if one exists.</description>
+    </item>
+    
+    <item>
+      <title>OpenMIPS处理器</title>
+      <link>https://zonepg.github.io/posts/programming/ca/2021-04-13-cpu-from-scratch/</link>
+      <pubDate>Tue, 13 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/ca/2021-04-13-cpu-from-scratch/</guid>
+      <description>最近在看《自己动手写CPU》，实现一个 5级流水线的 OpenMIPS处理器。这篇文章记录保存实现过程中用到的元器件接口以及系统结构结构图，主要为图片内容，方便查阅。
+教学版OpenMIPS处理器蓝图 外部接口 文件说明 流水线各个阶段对应的模块、文件 数据相关 逻辑、移位指令的数据相关 HI、LO寄存器带来的数据相关 数据流图 只实现一条指令的ori时的数据流图 添加了数据前推的OpenMIPS数据流图（回写、译码数据相关通过判断即可解决） 添加了移动操作指令后的数据流图 解决HI、寄存器带来的数据相关问题后的数据流图 增加算术操作后的数据流图 为实现转移指令而修改的数据流图 实现mips32指令集中所有整数指令之后的数据流图 系统结构图 原始的OpenMIPS五级流水线系统结构图（用于实现ori指令） 为实现数据前推而对OpenMIPS结构所做的修改 为实现移动操作而对OpenMIPS结构所做的修改 为实现流水线暂停机制而对系统结构所做的修改 为实现转移指令而对系统结构所做的修改 SOPC 实现 最小SOPC实现 确定指令种类 逻辑、移位操作与空指令 移动操作指令 算术操作指令 算术操作指令 乘累加、乘累减指令 转移指令 </description>
+    </item>
+    
+    <item>
+      <title>轻量级Verilog仿真环境搭建iVerilog&#43;GTKWave</title>
+      <link>https://zonepg.github.io/posts/programming/ca/2021-03-25-iverilog-gtkwave/</link>
+      <pubDate>Thu, 25 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/programming/ca/2021-03-25-iverilog-gtkwave/</guid>
+      <description>由于体系结构课程要用到verilog来实现MIPSCPU，之前上组成原理课程与数字逻辑课程用过ModelSim与Vivado，这两软件实在是太笨重了，同学们基本都是只拿来做做仿真运行就行了，ModelSim软件bug巨多，而Vivado编译运行速度实在是一言难尽。所以在网上找了一些轻量级Verilog仿真运行方案，Icarus Verilog + GTKWave似乎是一个不错的选择
+iVerilog开源、支持各平台，有语法检查，仿真，可以满足课程需求。
+这里给出Windows环境搭建，并给出我个人的食用方案。
+iVerilog 安装 iverlog，我个人下载的是iverilog-v11-20201123-x64_setup.exe [18.1MB]即可（不知道为什么2021版的突然突然44M，不过比 Vivado 10个G总舒服多了)。一路点下去，记得选中设置环境变量。
+将会安装好以下 3 个工具：
+iverlog：编译 verilog代码 vvp：将可执行文件生成仿真波形 gtkwave：打开仿真波形文件，显示波形 安装好后，可以在windows命令行中输入iverilog, vvp, gtkwave检查环境变量是否设置成功。
+食用方式 iverilog可以指定一些参数编译运行代码，下面给出我个人的食用方式，以下是文件目录树，verilog代码参考《自己动手写CPU》第三章 demo代码：
+├── pc_reg.v(PC寄存器实现) ├── rom.v(指令存储器实现) ├── rom.data(指令存储器数据) ├── inst_fetch.v(综合模块实现) ├── inst_fetch_tb.v(测试模块实现) ├── run.bat(编译运行脚本) ├── rmfile.bat(删除输出文件脚本) pc_reg.v module pc_reg(input wire clk, input wire rst, output reg[5:0] pc, output reg ce); // 指令存储器使能信号 always @(posedge clk) begin if (rst == 1&amp;#39;b1) begin ce &amp;lt;= 1&amp;#39;b0; // 在复位信号有效的时候，指令存储器使能信号无效 end else begin ce &amp;lt;= 1&amp;#39;b1; // 复位信号无效的时候，指令存储器使能信号有效 end end always @(posedge clk) begin if (ce == 1&amp;#39;b0) begin pc &amp;lt;= 6&amp;#39;h00; // 指令存储器使能信号有效时，pc保持为0 end else begin pc &amp;lt;= pc + 1&amp;#39;b1; end end endmodule rom.</description>
+    </item>
+    
+    <item>
+      <title>About Me</title>
+      <link>https://zonepg.github.io/posts/about/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/about/</guid>
+      <description>Study Computer Science. Code for fun.
+More about me. CS-Notes (Chinese) Résumé (Chinese)
+Learning Plan(Course/Book)
+TODO
+《机器学习编译》(Machine Learning Compilation)(In Chinese) 上海交大×商汤科技【OpenMMLab实践公开课】(In Chinese) CS 193p: Developing Applications for iOS using SwiftUI (In English) MIT 15.S12 Blockchain and Money, Fall 2018 (In English) 北京大学肖臻老师《区块链技术与应用》公开课 (In Chinese) DONE
+The Missing Semester of Your CS Education(In English)(In Chinese) CS 61A: Structure and Interpretation of Computer Programs (In English) CS 61B: Data Structures (In English) CS 61C: Great Ideas in Computer Architecture (Machine Structures) (In English) CS 110L: Safety in Systems Programming (In English) CMU 15-213: Introduction to Computer Systems (In English) CMU 15-445/645: Database Systems (In English) CS 144: Introduction to Computer Networking (In English) MIT 6.</description>
+    </item>
+    
+    <item>
+      <title>博客迁移</title>
+      <link>https://zonepg.github.io/posts/2021-03-19-blog-move/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/2021-03-19-blog-move/</guid>
+      <description>使用Hugo重新构建了博客，一些配置文件漏了或者多加不该加的属性会导致调试很久，下面指出可能导致bug的文件.
+list config.toml，不要加不该有的属性，这个导致tags调试了很久，出现莫名奇妙的结果。 themes/archie中只改动了layouts/_default/list.html(posts多文件设置)以及static/css/main.css(主页居中) layouts/index.html 显示自定义主页 posts/about.md 关于为什么要写博客 维护一个高质量博客可以带来很多益处， 读到为什么我要写博客——Jiayuan Thoughts，其中有几点十分受用：
+让自己进行有价值的思考 分享知识，走出”只可意会，不可言传“ 思考难免有错误，接受批评 一份优秀的简历 上面Jiayuan的链接对怎么去写高质量博客，讲的方法也非常不错。总之，希望自己能持之以恒地去维护一个高质量博客。</description>
+    </item>
+    
+  </channel>
+</rss>

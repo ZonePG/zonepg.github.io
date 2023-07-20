@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>博客搭建 on ZonePG</title>
+    <link>https://zonepg.github.io/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/</link>
+    <description>Recent content in 博客搭建 on ZonePG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>@ ZonePG</copyright>
+    <lastBuildDate>Fri, 19 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://zonepg.github.io/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>博客迁移</title>
+      <link>https://zonepg.github.io/posts/2021-03-19-blog-move/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://zonepg.github.io/posts/2021-03-19-blog-move/</guid>
+      <description>使用Hugo重新构建了博客，一些配置文件漏了或者多加不该加的属性会导致调试很久，下面指出可能导致bug的文件.
+list config.toml，不要加不该有的属性，这个导致tags调试了很久，出现莫名奇妙的结果。 themes/archie中只改动了layouts/_default/list.html(posts多文件设置)以及static/css/main.css(主页居中) layouts/index.html 显示自定义主页 posts/about.md 关于为什么要写博客 维护一个高质量博客可以带来很多益处， 读到为什么我要写博客——Jiayuan Thoughts，其中有几点十分受用：
+让自己进行有价值的思考 分享知识，走出”只可意会，不可言传“ 思考难免有错误，接受批评 一份优秀的简历 上面Jiayuan的链接对怎么去写高质量博客，讲的方法也非常不错。总之，希望自己能持之以恒地去维护一个高质量博客。</description>
+    </item>
+    
+  </channel>
+</rss>

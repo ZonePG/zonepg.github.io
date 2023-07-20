@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CS144 Lab Checkpoint 5: the network interface - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CS144 Lab Checkpoint 5: the network interface" />
+<meta property="og:description" content="在前面几个 Lab 中，我们的 TCP 实现可以保证两个主机之间传输 TCP segments，而这些片段实际是如何通过什么方式进行传输的呢？有如下三种方式：
+TCP-in-UDP-in-IP，TCP segments，通过 OS 提供接口（如 UDPSocket）构造 UDP header，IP header，Ethernet header，然后发送数据包给下一跳。OS 确保每个 socket 在连接两端的主机间有独占的地址和端口号，保证了不同应用程序之间的隔离。 TCP-in-IP，通常情况下，TCP segments 都是直接放在 IP 数据报里面，没有 TCP header 和 IP header 之间没有 UDP header，这也是通常所说的TCP/IP。OS 提供了一个接口，叫做 TUN 设备，用户直接构造 IP 报文，然后 OS 负责了其他的部分（构造 Ethernet header，并发送以太网帧）。 在 Lab4 中，tcp_helpers/ipv4 datagram.{hh,cc}表示了 IP 报文对象如何解析和构造，以及tcp_helpers/tcp_over_ip.cc如何将 TCP segments 封装成 IP 报文，CS144TCPSocket使用这些工具将 TCPConnection 连接到 TUN 设备。
+TCP-in-IP-in-Ethernet，上面的两种方法依然依赖 OS 的功能作为协议栈的一部分。每次将 IP 报文写入时，OS 都必须构造 link-layer (Ethernet 以太网)帧。因此 OS 根据给定 下一跳的 IP 地址，找到下一跳的以太网目的地址。如果不知道的话，OS 就会广播查询请求，并等待下一跳的响应。 而这些功能则是由 network interface 实现，负责 IP 报文与以太网帧之间的封装或解析。Lab5 中则将实现 network interface，生成原始的以太网帧，将其传给 TAP 设备（与 TUN 设备类似，但是更低层级，它交换以太网帧而不是 IP 报文）。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/net/2022-01-18-cs144-lab5/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-01-18T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-01-18T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CS144 Lab Checkpoint 5: the network interface"/>
+<meta name="twitter:description" content="在前面几个 Lab 中，我们的 TCP 实现可以保证两个主机之间传输 TCP segments，而这些片段实际是如何通过什么方式进行传输的呢？有如下三种方式：
+TCP-in-UDP-in-IP，TCP segments，通过 OS 提供接口（如 UDPSocket）构造 UDP header，IP header，Ethernet header，然后发送数据包给下一跳。OS 确保每个 socket 在连接两端的主机间有独占的地址和端口号，保证了不同应用程序之间的隔离。 TCP-in-IP，通常情况下，TCP segments 都是直接放在 IP 数据报里面，没有 TCP header 和 IP header 之间没有 UDP header，这也是通常所说的TCP/IP。OS 提供了一个接口，叫做 TUN 设备，用户直接构造 IP 报文，然后 OS 负责了其他的部分（构造 Ethernet header，并发送以太网帧）。 在 Lab4 中，tcp_helpers/ipv4 datagram.{hh,cc}表示了 IP 报文对象如何解析和构造，以及tcp_helpers/tcp_over_ip.cc如何将 TCP segments 封装成 IP 报文，CS144TCPSocket使用这些工具将 TCPConnection 连接到 TUN 设备。
+TCP-in-IP-in-Ethernet，上面的两种方法依然依赖 OS 的功能作为协议栈的一部分。每次将 IP 报文写入时，OS 都必须构造 link-layer (Ethernet 以太网)帧。因此 OS 根据给定 下一跳的 IP 地址，找到下一跳的以太网目的地址。如果不知道的话，OS 就会广播查询请求，并等待下一跳的响应。 而这些功能则是由 network interface 实现，负责 IP 报文与以太网帧之间的封装或解析。Lab5 中则将实现 network interface，生成原始的以太网帧，将其传给 TAP 设备（与 TUN 设备类似，但是更低层级，它交换以太网帧而不是 IP 报文）。"/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CS144 Lab Checkpoint 5: the network interface</h1>
+			<div class="meta">Posted on Jan 18, 2022</div>
+		</div>
+		
+
+		<section class="body">
+			<p><img src="/net/cs144-lab5/lab-overview.png" alt="lab-overview"></p>
+<p>在前面几个 Lab 中，我们的 TCP 实现可以保证两个主机之间传输 <strong>TCP segments</strong>，而这些片段实际是如何通过什么方式进行传输的呢？有如下三种方式：</p>
+<ul>
+<li><strong>TCP-in-UDP-in-IP</strong>，TCP segments，通过 OS 提供接口（如 <strong>UDPSocket</strong>）构造 UDP header，IP header，Ethernet header，然后发送数据包给下一跳。OS 确保每个 socket 在连接两端的主机间有独占的地址和端口号，保证了不同应用程序之间的隔离。</li>
+<li><strong>TCP-in-IP</strong>，通常情况下，TCP segments 都是直接放在 IP 数据报里面，没有 TCP header 和 IP header 之间没有 UDP header，这也是通常所说的<code>TCP/IP</code>。OS 提供了一个接口，叫做 TUN 设备，用户直接构造 IP 报文，然后 OS 负责了其他的部分（构造 Ethernet header，并发送以太网帧）。</li>
+</ul>
+<blockquote>
+<p>在 Lab4 中，<code>tcp_helpers/ipv4 datagram.{hh,cc}</code>表示了 IP 报文对象如何解析和构造，以及<code>tcp_helpers/tcp_over_ip.cc</code>如何将 TCP segments 封装成 IP 报文，CS144TCPSocket使用这些工具将 TCPConnection 连接到 TUN 设备。</p>
+</blockquote>
+<ul>
+<li><strong>TCP-in-IP-in-Ethernet</strong>，上面的两种方法依然依赖 OS 的功能作为协议栈的一部分。每次将 IP 报文写入时，OS 都必须构造  link-layer (Ethernet 以太网)帧。因此 OS 根据给定 下一跳的 IP 地址，找到下一跳的以太网目的地址。如果不知道的话，OS 就会广播查询请求，并等待下一跳的响应。</li>
+</ul>
+<blockquote>
+<p>而这些功能则是由 network interface 实现，负责 IP 报文与以太网帧之间的封装或解析。Lab5 中则将实现 network interface，生成原始的以太网帧，将其传给 TAP 设备（与 TUN 设备类似，但是更低层级，它交换以太网帧而不是 IP 报文）。</p>
+</blockquote>
+<p>总结来说 network interface 的主要工作就是：根据每一个下一跳的 IP 地址，查找（缓存）它的以太网目的地址（又叫物理地址，MAC 地址），这个协议也叫做 <strong>ARP</strong> 协议。</p>
+<h2 id="arp-协议实现">ARP 协议实现</h2>
+<p>ARP 协议主要维护 IP 地址到以太网目的地址的映射，该映射是一个缓存。</p>
+<h3 id="networkinterfacesend_datagram">NetworkInterface::send_datagram</h3>
+<p>这个方法由用户调用，将 IP 报文封装成以太网帧，并根据 IP 地址获取下一跳的以太网目的地址，从而发送给下一跳。</p>
+<ul>
+<li>如果知道以太网目的地址，则直接封装成以太网帧发送给下一跳。创建以太网帧（设置 type =  EthernetHeader::TYPE_IPv4），设置 payload 为序列化 IP 报文，设置以太网源地址和以太网目的地址。</li>
+<li>否则的话，广播 ARP 请求给下一跳，并将要发送的 IP 报文放进待发送报文等待队列里，以便于收到 ARP 回复后再次发送。</li>
+</ul>
+<blockquote>
+<p>为了避免网络上充满 ARP 请求，如果 network interface 向 IP 地址发送了 ARP 请求，在 5s 内不会向相同的地址再次发送 ARP 请求，但是仍然需要将要发送的 IP 报文放进待发送报文等待队列里。</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] ethernet_address Ethernet (what ARP calls &#34;hardware&#34;) address of the interface
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] ip_address IP (what ARP calls &#34;protocol&#34;) address of the interface
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>NetworkInterface<span style="color:#f92672">::</span>NetworkInterface(<span style="color:#66d9ef">const</span> EthernetAddress <span style="color:#f92672">&amp;</span>ethernet_address, <span style="color:#66d9ef">const</span> Address <span style="color:#f92672">&amp;</span>ip_address)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">:</span> _ethernet_address(ethernet_address), _ip_address(ip_address) {
+</span></span><span style="display:flex;"><span>    cerr <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;DEBUG: Network interface has Ethernet address &#34;</span> <span style="color:#f92672">&lt;&lt;</span> to_string(_ethernet_address) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34; and IP address &#34;</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#f92672">&lt;&lt;</span> ip_address.ip() <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] dgram the IPv4 datagram to be sent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] next_hop the IP address of the interface to send it to (typically a router or default gateway, but may also be another host if directly connected to the same network as the destination)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//! (Note: the Address type can be converted to a uint32_t (raw 32-bit IP address) with the Address::ipv4_numeric() method.)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> NetworkInterface<span style="color:#f92672">::</span>send_datagram(<span style="color:#66d9ef">const</span> InternetDatagram <span style="color:#f92672">&amp;</span>dgram, <span style="color:#66d9ef">const</span> Address <span style="color:#f92672">&amp;</span>next_hop) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// convert IP address of next hop to raw 32-bit representation (used in ARP header)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint32_t</span> next_hop_ip <span style="color:#f92672">=</span> next_hop.ipv4_numeric();
+</span></span><span style="display:flex;"><span>    EthernetFrame ethernet_frame;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_cache.find(next_hop_ip) <span style="color:#f92672">!=</span> _cache.end()) {
+</span></span><span style="display:flex;"><span>        ethernet_frame.header().src <span style="color:#f92672">=</span> _ethernet_address;
+</span></span><span style="display:flex;"><span>        ethernet_frame.header().dst <span style="color:#f92672">=</span> _cache[next_hop_ip]._MAC_Address;
+</span></span><span style="display:flex;"><span>        ethernet_frame.header().type <span style="color:#f92672">=</span> EthernetHeader<span style="color:#f92672">::</span>TYPE_IPv4;
+</span></span><span style="display:flex;"><span>        ethernet_frame.payload() <span style="color:#f92672">=</span> dgram.serialize();
+</span></span><span style="display:flex;"><span>        _frames_out.push(ethernet_frame);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">bool</span> send_ARP <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (_queue_map.find(next_hop_ip) <span style="color:#f92672">!=</span> _queue_map.end()) {
+</span></span><span style="display:flex;"><span>            send_ARP <span style="color:#f92672">=</span> _queue_map[next_hop_ip]._time_since_last_ARP_request_send <span style="color:#f92672">&gt;=</span> DEFAULT_ARP_RESEND_WAITING_TIME;
+</span></span><span style="display:flex;"><span>            _queue_map[next_hop_ip]._time_since_last_ARP_request_send <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            _queue_map[next_hop_ip] <span style="color:#f92672">=</span> WaitingDatagram{};
+</span></span><span style="display:flex;"><span>            send_ARP <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        _queue_map[next_hop_ip]._waiting_datagram.push(dgram);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>send_ARP) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// send arp
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        ARPMessage arp;
+</span></span><span style="display:flex;"><span>        arp.opcode <span style="color:#f92672">=</span> ARPMessage<span style="color:#f92672">::</span>OPCODE_REQUEST;
+</span></span><span style="display:flex;"><span>        arp.sender_ethernet_address <span style="color:#f92672">=</span> _ethernet_address;
+</span></span><span style="display:flex;"><span>        arp.sender_ip_address <span style="color:#f92672">=</span> _ip_address.ipv4_numeric();
+</span></span><span style="display:flex;"><span>        arp.target_ethernet_address <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>        arp.target_ip_address <span style="color:#f92672">=</span> next_hop_ip;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        ethernet_frame.header().src <span style="color:#f92672">=</span> _ethernet_address;
+</span></span><span style="display:flex;"><span>        ethernet_frame.header().dst <span style="color:#f92672">=</span> ETHERNET_BROADCAST;
+</span></span><span style="display:flex;"><span>        ethernet_frame.header().type <span style="color:#f92672">=</span> EthernetHeader<span style="color:#f92672">::</span>TYPE_ARP;
+</span></span><span style="display:flex;"><span>        ethernet_frame.payload() <span style="color:#f92672">=</span> arp.serialize();
+</span></span><span style="display:flex;"><span>        _frames_out.push(ethernet_frame);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="networkinterfacerecv_frame">NetworkInterface::recv_frame</h3>
+<p>这个方法是接收网络上的以太网帧。忽略不是传给本地以太网源地址的以太网帧（传来的以太网帧的目的地址不是自身的以太网帧的源地址或广播地址）。</p>
+<ul>
+<li>如果接收以太网帧的类型是 IPv4，那么将 payload 解析成 IP 报文，并返回给用户。</li>
+<li>如果接收以太网帧的类型是 ARP，解析 将 payload 解析成 ARPMessage，并将发送方的 IP 地址和以太网地址映射，保持 30s。如果 ARP 请求的 IP 地址是本身的 IP 地址，则回复 ARP 请求，将以太网地址发送给发送方。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] frame the incoming Ethernet frame
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>optional<span style="color:#f92672">&lt;</span>InternetDatagram<span style="color:#f92672">&gt;</span> NetworkInterface<span style="color:#f92672">::</span>recv_frame(<span style="color:#66d9ef">const</span> EthernetFrame <span style="color:#f92672">&amp;</span>frame) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (frame.header().dst <span style="color:#f92672">!=</span> _ethernet_address <span style="color:#f92672">&amp;&amp;</span> frame.header().dst <span style="color:#f92672">!=</span> ETHERNET_BROADCAST) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> {};
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (frame.header().type <span style="color:#f92672">==</span> EthernetHeader<span style="color:#f92672">::</span>TYPE_IPv4) {
+</span></span><span style="display:flex;"><span>        InternetDatagram dgram;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (dgram.parse(frame.payload()) <span style="color:#f92672">!=</span> ParseResult<span style="color:#f92672">::</span>NoError) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> {};
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> dgram;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (frame.header().type <span style="color:#f92672">==</span> EthernetHeader<span style="color:#f92672">::</span>TYPE_ARP) {
+</span></span><span style="display:flex;"><span>        ARPMessage arp_receive;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (arp_receive.parse(frame.payload()) <span style="color:#f92672">!=</span> ParseResult<span style="color:#f92672">::</span>NoError) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> {};
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// update cache
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (_cache.find(arp_receive.sender_ip_address) <span style="color:#f92672">==</span> _cache.end()) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// not find, create new one
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            _cache[arp_receive.sender_ip_address] <span style="color:#f92672">=</span> EthernetAddressEntry{};
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        _cache[arp_receive.sender_ip_address]._cache_time <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        _cache[arp_receive.sender_ip_address]._MAC_Address <span style="color:#f92672">=</span> arp_receive.sender_ethernet_address;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// send ipv4 frame and delete send qeue map
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (_queue_map.find(arp_receive.sender_ip_address) <span style="color:#f92672">!=</span> _queue_map.end()) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>_queue_map[arp_receive.sender_ip_address]._waiting_datagram.empty()) {
+</span></span><span style="display:flex;"><span>                InternetDatagram dgram <span style="color:#f92672">=</span> _queue_map[arp_receive.sender_ip_address]._waiting_datagram.front();
+</span></span><span style="display:flex;"><span>                _queue_map[arp_receive.sender_ip_address]._waiting_datagram.pop();
+</span></span><span style="display:flex;"><span>                send_datagram(dgram, Address<span style="color:#f92672">::</span>from_ipv4_numeric(arp_receive.sender_ip_address));
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        _queue_map.erase(arp_receive.sender_ip_address);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (arp_receive.opcode <span style="color:#f92672">==</span> ARPMessage<span style="color:#f92672">::</span>OPCODE_REQUEST <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>            arp_receive.target_ip_address <span style="color:#f92672">==</span> _ip_address.ipv4_numeric()) {
+</span></span><span style="display:flex;"><span>            ARPMessage arp_send;
+</span></span><span style="display:flex;"><span>            arp_send.opcode <span style="color:#f92672">=</span> ARPMessage<span style="color:#f92672">::</span>OPCODE_REPLY;
+</span></span><span style="display:flex;"><span>            arp_send.sender_ethernet_address <span style="color:#f92672">=</span> _ethernet_address;
+</span></span><span style="display:flex;"><span>            arp_send.sender_ip_address <span style="color:#f92672">=</span> _ip_address.ipv4_numeric();
+</span></span><span style="display:flex;"><span>            arp_send.target_ethernet_address <span style="color:#f92672">=</span> arp_receive.sender_ethernet_address;
+</span></span><span style="display:flex;"><span>            arp_send.target_ip_address <span style="color:#f92672">=</span> arp_receive.sender_ip_address;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            EthernetFrame ethernet_frame;
+</span></span><span style="display:flex;"><span>            ethernet_frame.header().src <span style="color:#f92672">=</span> _ethernet_address;
+</span></span><span style="display:flex;"><span>            ethernet_frame.header().dst <span style="color:#f92672">=</span> arp_receive.sender_ethernet_address;
+</span></span><span style="display:flex;"><span>            ethernet_frame.header().type <span style="color:#f92672">=</span> EthernetHeader<span style="color:#f92672">::</span>TYPE_ARP;
+</span></span><span style="display:flex;"><span>            ethernet_frame.payload() <span style="color:#f92672">=</span> arp_send.serialize();
+</span></span><span style="display:flex;"><span>            _frames_out.push(ethernet_frame);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {};
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="networkinterfacetick">NetworkInterface::tick</h3>
+<p>对 ARP 请求以及 cache 映射计时。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">//! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> NetworkInterface<span style="color:#f92672">::</span>tick(<span style="color:#66d9ef">const</span> size_t ms_since_last_tick) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// tick for arp send
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">auto</span> iter <span style="color:#f92672">=</span> _queue_map.begin(); iter <span style="color:#f92672">!=</span> _queue_map.end(); iter<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        iter<span style="color:#f92672">-&gt;</span>second._time_since_last_ARP_request_send <span style="color:#f92672">+=</span> ms_since_last_tick;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// delete cache ip address which is timeout
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    std<span style="color:#f92672">::</span>queue<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">&gt;</span> deleted_ips_in_cache;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">auto</span> iter <span style="color:#f92672">=</span> _cache.begin(); iter <span style="color:#f92672">!=</span> _cache.end(); iter<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        iter<span style="color:#f92672">-&gt;</span>second._cache_time <span style="color:#f92672">+=</span> ms_since_last_tick;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (iter<span style="color:#f92672">-&gt;</span>second._cache_time <span style="color:#f92672">&gt;=</span> DEFAULT_CACHE_TIME) {
+</span></span><span style="display:flex;"><span>            deleted_ips_in_cache.push(iter<span style="color:#f92672">-&gt;</span>first);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>deleted_ips_in_cache.empty()) {
+</span></span><span style="display:flex;"><span>        _cache.erase(deleted_ips_in_cache.front());
+</span></span><span style="display:flex;"><span>        deleted_ips_in_cache.pop();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="helper-variable-definition">helper variable definition</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">NetworkInterface</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// added
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">EthernetAddressEntry</span> {
+</span></span><span style="display:flex;"><span>      EthernetAddress _MAC_Address;
+</span></span><span style="display:flex;"><span>      size_t _cache_time;
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">constexpr</span> size_t DEFAULT_CACHE_TIME <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1000</span>;
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>map<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">uint32_t</span>, EthernetAddressEntry<span style="color:#f92672">&gt;</span> _cache{};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">constexpr</span> size_t DEFAULT_ARP_RESEND_WAITING_TIME <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1000</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">WaitingDatagram</span> {
+</span></span><span style="display:flex;"><span>      size_t _time_since_last_ARP_request_send{<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>      std<span style="color:#f92672">::</span>queue<span style="color:#f92672">&lt;</span>InternetDatagram<span style="color:#f92672">&gt;</span> _waiting_datagram{};
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>map<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">uint32_t</span>, WaitingDatagram<span style="color:#f92672">&gt;</span> _queue_map{};
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div>
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/computer-networking">Computer Networking</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

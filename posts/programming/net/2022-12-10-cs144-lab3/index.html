@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CS144 Lab Checkpoint 3: the TCP sender - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CS144 Lab Checkpoint 3: the TCP sender" />
+<meta property="og:description" content="Lab 3 实现 TCPSender，它负责将 ByteStream 封装成 TCPSegment 发送给对等端。
+这样 TCPReceiver 接收这些 TCPSegment 序列并还原成原始的 ByteStream，并发送 acknowledgments（确认） 和 window advertisements（通告窗口）给 TCPSender。
+TCPSender 发送 TCPSegment 时，写时涉及的字段包括与 TCPReceiver 相关的所有字段：the sequence number, the SYN flag, the payload, the FIN flag。
+TCPSender 接收 TCPSegment 时，读时涉及的字段包括：the ackno, the window size。
+下图是 TCPSender 操作 TCPSegment 涉及的字段，蓝色部分是写时字段、红色部分是读时字段。
+总结 TCPSender 的任务就是：
+追踪另一端的接收方窗口，处理接收方发送过来的确认号和窗口大小。
+尽可能填充窗口，读 ByteStream，封装成 TCPSegment（可能包括 SYN 和 FIN ），发送给接收方。
+追踪发送给了接收方，但是还没有被确认的 segments，这些 segments 被称作 outstanding segments。
+如果 outstanding segments 超过一定时间还没被确认，那就重新将它发送给接收方。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/net/2022-12-10-cs144-lab3/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-12-10T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-12-10T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CS144 Lab Checkpoint 3: the TCP sender"/>
+<meta name="twitter:description" content="Lab 3 实现 TCPSender，它负责将 ByteStream 封装成 TCPSegment 发送给对等端。
+这样 TCPReceiver 接收这些 TCPSegment 序列并还原成原始的 ByteStream，并发送 acknowledgments（确认） 和 window advertisements（通告窗口）给 TCPSender。
+TCPSender 发送 TCPSegment 时，写时涉及的字段包括与 TCPReceiver 相关的所有字段：the sequence number, the SYN flag, the payload, the FIN flag。
+TCPSender 接收 TCPSegment 时，读时涉及的字段包括：the ackno, the window size。
+下图是 TCPSender 操作 TCPSegment 涉及的字段，蓝色部分是写时字段、红色部分是读时字段。
+总结 TCPSender 的任务就是：
+追踪另一端的接收方窗口，处理接收方发送过来的确认号和窗口大小。
+尽可能填充窗口，读 ByteStream，封装成 TCPSegment（可能包括 SYN 和 FIN ），发送给接收方。
+追踪发送给了接收方，但是还没有被确认的 segments，这些 segments 被称作 outstanding segments。
+如果 outstanding segments 超过一定时间还没被确认，那就重新将它发送给接收方。"/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CS144 Lab Checkpoint 3: the TCP sender</h1>
+			<div class="meta">Posted on Dec 10, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p><img src="/net/cs144-lab1/tcp-socket.png" alt="tcp-socket"></p>
+<p>Lab 3 实现 <strong>TCPSender</strong>，它负责将 <strong>ByteStream</strong> 封装成 <strong>TCPSegment</strong> 发送给对等端。</p>
+<p>这样 TCPReceiver 接收这些 TCPSegment 序列并还原成原始的 ByteStream，并发送 acknowledgments（确认） 和 window advertisements（通告窗口）给 TCPSender。</p>
+<p>TCPSender 发送 TCPSegment 时，写时涉及的字段包括与 TCPReceiver 相关的所有字段：the sequence number, the SYN flag, the payload, the FIN flag。</p>
+<p>TCPSender 接收 TCPSegment 时，读时涉及的字段包括：the ackno, the window size。</p>
+<p>下图是 TCPSender 操作 TCPSegment 涉及的字段，蓝色部分是写时字段、红色部分是读时字段。</p>
+<p><img src="/net/cs144-lab2/tcp-segment.png" alt="tcp-socket"></p>
+<p>总结 TCPSender 的任务就是：</p>
+<ol>
+<li>
+<p>追踪<strong>另一端的接收方</strong>窗口，处理接收方发送过来的<strong>确认号</strong>和<strong>窗口大小</strong>。</p>
+</li>
+<li>
+<p>尽可能填充窗口，读 ByteStream，封装成 TCPSegment（可能包括 SYN 和 FIN ），发送给接收方。</p>
+</li>
+<li>
+<p>追踪发送给了接收方，但是还没有被确认的 segments，这些 segments 被称作 <strong>outstanding segments</strong>。</p>
+</li>
+<li>
+<p>如果 outstanding segments 超过一定时间还没被确认，那就重新将它发送给接收方。</p>
+</li>
+</ol>
+<h2 id="如何实现丢失超时重传">如何实现丢失/超时重传？</h2>
+<p>上述 1 和 2 很好理解，下面是讲解 3 和 4 的细节，来实现 TCPSender 超时重传。</p>
+<ol>
+<li>
+<p>当初始化 TCPSender 时，会初始化 <strong>retransmission timeout</strong> (RTO, 重传超时时间) 为 <strong>_initial_retransmission_timeout</strong>。</p>
+</li>
+<li>
+<p>当 TCPSender 发送 segment 时，会启动一个 <strong>retransmission timer</strong> (重传计时器)。</p>
+</li>
+<li>
+<p>重传计时器时间超过了 RTO：</p>
+<ol>
+<li>重发 outstanding segments 中最早的一个 segment</li>
+<li>如果窗口大小不为0，并且不是同步请求 segment，自增超时重传次数，RTO 时间设置为原来的两倍。</li>
+<li>重置重传计时器时间为0。</li>
+</ol>
+</li>
+<li>
+<p>当收到一个新的确认号</p>
+<ol>
+<li>重置 RTO 为 _initial_retransmission_timeout。</li>
+<li>如果还有没被确认的 segments，重置重传计时器为0；否则，outstanding segments 为空，停止重传计时器。</li>
+<li>重置超时重传次数为0。</li>
+</ol>
+</li>
+</ol>
+<h2 id="实现细节">实现细节</h2>
+<p>以下只贴部分核心实现代码</p>
+<h3 id="retransmission-timer超时重传计时器">retransmission timer（超时重传计时器）</h3>
+<p>根据上述描述，我们的超时重传计数器接口如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RetransmissionTimer</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> _running;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> _retransmission_timer;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> _retransmission_timeout; <span style="color:#75715e">// RTO
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">public</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    RetransmissionTimer(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> retransmission_timeout);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">timer</span>() <span style="color:#66d9ef">const</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">tick</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> tick);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">RTO</span>() <span style="color:#66d9ef">const</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">reset</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">double_RTO</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">reset_RTO</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> retransmission_timeout);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">stop</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> <span style="color:#a6e22e">running</span>() <span style="color:#66d9ef">const</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">start</span>();
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><h3 id="void-fill_window">void fill_window()</h3>
+<p>TCPSender 尽可能地填充接收方窗口，读取 ByteStream 封装成 TCPSegment 发送给接收方，超过<code>TCPConfig::MAX_PAYLOAD_SIZE</code>大小时要分多次发送。</p>
+<p>需要注意的是当接收方窗口大小为0时，fill_window() 函数将窗口大小视为 1。关于解释，可以引用 lab 指导的原文：</p>
+<blockquote>
+<p>What should I do if the window size is zero? If the receiver has announced a window size of zero, the fill window method should act like the window size is one. The sender might end up sending a single byte that gets rejected (and not acknowledged) by the receiver, but this can also provoke the receiver into sending a new acknowledgment segment where it reveals that more space has opened up in its window. Without this, the sender would never learn that it was allowed to start sending again.</p>
+</blockquote>
+<p>比如 TCPSender 初始化时，还没接收到接收方的窗口大小，此时认为接收方窗口大小为0，但是又需要发送 segment 给接收方，此时 TCPSender 可以发送一个字节长的 segment，以与接收方收到确认，并将确认号和窗口大小发送回 TCPSender，这样就打开了更多了的窗口。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPSender<span style="color:#f92672">::</span>fill_window() {
+</span></span><span style="display:flex;"><span>    TCPSegment segment;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>_syn_set) {
+</span></span><span style="display:flex;"><span>        _syn_set <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>        segment.header().syn <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>        send_segment(segment);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_fin_set) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int32_t</span> receiver_remaining_window_size <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>        _receiver_window_size <span style="color:#f92672">?</span> (_receiver_window_size <span style="color:#f92672">-</span> bytes_in_flight()) <span style="color:#f92672">:</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> bytes_in_flight());
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (receiver_remaining_window_size <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>_fin_set) {
+</span></span><span style="display:flex;"><span>        size_t read_size <span style="color:#f92672">=</span> min(<span style="color:#66d9ef">static_cast</span><span style="color:#f92672">&lt;</span>size_t<span style="color:#f92672">&gt;</span>(receiver_remaining_window_size), TCPConfig<span style="color:#f92672">::</span>MAX_PAYLOAD_SIZE);
+</span></span><span style="display:flex;"><span>        segment.payload() <span style="color:#f92672">=</span> stream_in().read(read_size);
+</span></span><span style="display:flex;"><span>        receiver_remaining_window_size <span style="color:#f92672">-=</span> segment.length_in_sequence_space();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (stream_in().eof() <span style="color:#f92672">&amp;&amp;</span> receiver_remaining_window_size <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>            segment.header().fin <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>            _fin_set <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>            receiver_remaining_window_size<span style="color:#f92672">--</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (segment.length_in_sequence_space() <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        send_segment(segment);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="void-ack_receivedconst-wrappingint32-ackno-const-uint16-t-window-size">void ack_received(const WrappingInt32 ackno, const uint16 t window size)</h3>
+<ol>
+<li>
+<p>如果收到的确认号不在等待确认的范围中，则直接返回。</p>
+</li>
+<li>
+<p>如果收到的确认号与上一次收到的确认号相同，表示原先的接收方窗口太小，TCPSender 还有 ByteStream 没被封装成 TCPSegment 发送，所以重置这次更大的接收方窗口，可以让 TCPSender 发送新的 TCPSegment。</p>
+</li>
+<li>
+<p>_segments_outstanding 中的每一个末尾序列号小于 ackno 的 segment 表示都已被接收方收到，将这些 segment 从 _segments_outstanding 移出。</p>
+</li>
+<li>
+<p>更新重传计时器。</p>
+</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPSender<span style="color:#f92672">::</span>ack_received(<span style="color:#66d9ef">const</span> WrappingInt32 ackno, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint16_t</span> window_size) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">uint64_t</span> absolute_ackno <span style="color:#f92672">=</span> unwrap(ackno, _isn, _prev_ackno);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (absolute_ackno <span style="color:#f92672">&lt;</span> _prev_ackno <span style="color:#f92672">||</span> absolute_ackno <span style="color:#f92672">&gt;</span> _next_seqno) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// absolute_ackno == _prev_ackno also set this too
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    _receiver_window_size <span style="color:#f92672">=</span> window_size;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (absolute_ackno <span style="color:#f92672">==</span> _prev_ackno) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>_segments_outstanding.empty()) {
+</span></span><span style="display:flex;"><span>        TCPSegment segment <span style="color:#f92672">=</span> _segments_outstanding.front();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">uint64_t</span> absolute_end_seqno <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>            unwrap(segment.header().seqno <span style="color:#f92672">+</span> segment.length_in_sequence_space() <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, _isn, _prev_ackno);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (absolute_end_seqno <span style="color:#f92672">&gt;=</span> absolute_ackno) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        _segments_outstanding.pop();
+</span></span><span style="display:flex;"><span>        _bytes_in_flight <span style="color:#f92672">-=</span> segment.length_in_sequence_space();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _prev_ackno <span style="color:#f92672">=</span> absolute_ackno;
+</span></span><span style="display:flex;"><span>    _retransmission_timer.reset_RTO(_initial_retransmission_timeout);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_segments_outstanding.empty()) {
+</span></span><span style="display:flex;"><span>        _retransmission_timer.stop();
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        _retransmission_timer.reset();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    _consecutive_retransmissions_num <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="void-tickconst-size-t-ms-since-last-tick">void tick(const size t ms since last tick)</h3>
+<p>重传计时器超过 RTO 时，并且有未被确认的 segment，则需要重新发送 segment。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> TCPSender<span style="color:#f92672">::</span>tick(<span style="color:#66d9ef">const</span> size_t ms_since_last_tick) {
+</span></span><span style="display:flex;"><span>    _retransmission_timer.tick(ms_since_last_tick);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_retransmission_timer.timer() <span style="color:#f92672">&gt;=</span> _retransmission_timer.RTO() <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>_segments_outstanding.empty()) {
+</span></span><span style="display:flex;"><span>        resend_segment();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (_receiver_window_size <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> _segments_outstanding.front().header().syn) {
+</span></span><span style="display:flex;"><span>            _consecutive_retransmissions_num<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>            _retransmission_timer.double_RTO();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        _retransmission_timer.reset();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="面试常见问题">面试常见问题</h2>
+<h3 id="tcp-如何保证可靠传输">TCP 如何保证可靠传输？</h3>
+<p>TCP 解决了网络传输过程中会出现的四种问题：lost, reordered, altered, or duplicated。</p>
+<ol>
+<li>
+<p>reordered and duplicated：Lab1 中实现的 stream reassembler，将输入的乱序字节流合并为有序的字节流，忽略重复的字节流，输出为合法的字节流，Lab2 实现的 TCPReceiver 则使用 stream reassembler 来接收 TCPSegment，从而解决了乱序、重复问题。</p>
+</li>
+<li>
+<p>lost: Lab3 中我们实现的 TCPSender，有超时重传计时器，发送 TCPSegment 时，启动超时重传计时器。如果在 RTO 时间内没有被确认，RTO 变为两倍，并重新发送 TCPSegment，重新开始计时。</p>
+</li>
+</ol>
+<h3 id="什么是-arqautomatic-repeat-request-">什么是 ARQ(automatic repeat request) ？</h3>
+<p>Lab3 指导的原文如下：</p>
+<blockquote>
+<p>The basic principle is to send whatever the receiver will allow us to send (filling the window), and keep retransmitting until the receiver acknowledges each segment. This is called “automatic repeat request” (ARQ). The sender divides the byte stream up into segments and sends them, as much as the receiver’s window allows. Thanks to your work last week, we know that the remote TCP receiver can reconstruct the byte stream as long as it receives each index-tagged byte at least once—no matter the order. The sender’s job is to make sure the receiver gets each byte at least once.</p>
+</blockquote>
+<p>对等端没有在 RTO 时间内确认 TCPSegment，TCPSender 就需要重新发送，TCPSender 的任务是确保接收方对于每个字节数据都至少保证接收过一次。</p>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/computer-networking">Computer Networking</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>

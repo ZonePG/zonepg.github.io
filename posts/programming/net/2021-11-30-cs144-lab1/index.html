@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html><head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>CS144 Lab Checkpoint 1: stitching substrings into a byte stream - ZonePG</title><meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<meta property="og:image" content=""/>
+	<meta property="og:title" content="CS144 Lab Checkpoint 1: stitching substrings into a byte stream" />
+<meta property="og:description" content="上图是 TCP 实现中的各个模块以及数据流动，Lab0 中已经实现了 ByteStream，TCP 的任务是在不可靠网络上传输一对可靠的 ByteStream，，保证在一端写入的数据，能够被另一端读出。
+Lab1 中，将实现一个 StreamReassembler，接收数据片段（substring）、拼装成连续的、正确的 ByteStream 序列，ByteStream 可以被读出。StreamReassembler 解决了网络传输过程中的 乱序(reordering) 与 重复(dupication)问题。
+What’s the “capacity”? push_string() 负责接收数据片段，以及该片段的 index，对于超出 &ldquo;capacity&rdquo; 区域的片段，将拒绝接收。&ldquo;capacity&rdquo; 的区域如下图所示。
+蓝色部分是已经被读出的字节流。 绿色部分是已经在 ByteStream 中，但还未被读出的字节流。 红色部分是 ByteStream 剩余的容量，也就是还可以写入的字节流大小。 这些字段的实现如下：
+size_t stream_start_index() const { return 0; } size_t first_unread_index() const { return _output.bytes_read(); } size_t first_unassemebled_index() const { return _output.bytes_written(); } size_t first_unacceptable_index() const { return _output.bytes_read() &#43; _capacity; } 实现细节 核心部分是 push_string(const std::string &amp;data, const uint64_t index, const bool eof) 方法：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://zonepg.github.io/posts/programming/net/2021-11-30-cs144-lab1/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-11-30T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-11-30T00:00:00+00:00" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CS144 Lab Checkpoint 1: stitching substrings into a byte stream"/>
+<meta name="twitter:description" content="上图是 TCP 实现中的各个模块以及数据流动，Lab0 中已经实现了 ByteStream，TCP 的任务是在不可靠网络上传输一对可靠的 ByteStream，，保证在一端写入的数据，能够被另一端读出。
+Lab1 中，将实现一个 StreamReassembler，接收数据片段（substring）、拼装成连续的、正确的 ByteStream 序列，ByteStream 可以被读出。StreamReassembler 解决了网络传输过程中的 乱序(reordering) 与 重复(dupication)问题。
+What’s the “capacity”? push_string() 负责接收数据片段，以及该片段的 index，对于超出 &ldquo;capacity&rdquo; 区域的片段，将拒绝接收。&ldquo;capacity&rdquo; 的区域如下图所示。
+蓝色部分是已经被读出的字节流。 绿色部分是已经在 ByteStream 中，但还未被读出的字节流。 红色部分是 ByteStream 剩余的容量，也就是还可以写入的字节流大小。 这些字段的实现如下：
+size_t stream_start_index() const { return 0; } size_t first_unread_index() const { return _output.bytes_read(); } size_t first_unassemebled_index() const { return _output.bytes_written(); } size_t first_unacceptable_index() const { return _output.bytes_read() &#43; _capacity; } 实现细节 核心部分是 push_string(const std::string &amp;data, const uint64_t index, const bool eof) 方法："/>
+<script src="https://zonepg.github.io/js/feather.min.js"></script>
+	
+	<link href="https://zonepg.github.io/css/fonts.css" rel="stylesheet">
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="https://zonepg.github.io/css/main.css" />
+	
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="https://zonepg.github.io/">ZonePG</a>
+	</div>
+	<nav>
+		
+	</nav>
+	
+</header>
+
+<main>
+	<article>
+		<div class="title">
+			<h1 class="title">CS144 Lab Checkpoint 1: stitching substrings into a byte stream</h1>
+			<div class="meta">Posted on Nov 30, 2021</div>
+		</div>
+		
+
+		<section class="body">
+			<p><img src="/net/cs144-lab1/tcp-socket.png" alt="tcp-socket"></p>
+<p>上图是 TCP 实现中的各个模块以及数据流动，Lab0 中已经实现了 <strong>ByteStream</strong>，TCP 的任务是在不可靠网络上传输一对可靠的 ByteStream，，保证在一端写入的数据，能够被另一端读出。</p>
+<p>Lab1 中，将实现一个 <strong>StreamReassembler</strong>，接收数据片段（substring）、拼装成连续的、正确的 ByteStream 序列，ByteStream 可以被读出。StreamReassembler 解决了网络传输过程中的 乱序(reordering) 与 重复(dupication)问题。</p>
+<h2 id="whats-the-capacity">What’s the “capacity”?</h2>
+<p><code>push_string()</code> 负责接收数据片段，以及该片段的 index，对于超出 &ldquo;capacity&rdquo; 区域的片段，将拒绝接收。&ldquo;capacity&rdquo; 的区域如下图所示。</p>
+<ul>
+<li>蓝色部分是已经被读出的字节流。</li>
+<li>绿色部分是已经在 ByteStream 中，但还未被读出的字节流。</li>
+<li>红色部分是 ByteStream 剩余的容量，也就是还可以写入的字节流大小。</li>
+</ul>
+<p><img src="/net/cs144-lab1/reassembler-capacity.png" alt="reassembler-capacity"></p>
+<p>这些字段的实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span>size_t <span style="color:#a6e22e">stream_start_index</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>; }
+</span></span><span style="display:flex;"><span>size_t <span style="color:#a6e22e">first_unread_index</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _output.bytes_read(); }
+</span></span><span style="display:flex;"><span>size_t <span style="color:#a6e22e">first_unassemebled_index</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _output.bytes_written(); }
+</span></span><span style="display:flex;"><span>size_t <span style="color:#a6e22e">first_unacceptable_index</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> _output.bytes_read() <span style="color:#f92672">+</span> _capacity; }
+</span></span></code></pre></div><h2 id="实现细节">实现细节</h2>
+<p>核心部分是 <code>push_string(const std::string &amp;data, const uint64_t index, const bool eof)</code> 方法：</p>
+<ul>
+<li>首先是对写入的 data 数据片段作预处理。
+<ul>
+<li>当 data 的末尾位置 &lt; first unassembled 时，表示 data 已经被写入过 ByteStream 中，不会被再次写入，因此直接返回即可。</li>
+<li>当 data 的起始位置(index) &gt;= first unacceptable 时，表示数据片段超出了 capacity 的范围，不该被写入，直接返回即可。</li>
+<li>当 data 的末尾位置 &gt; first unacceptable 时，超出 first unacceptable 的数据片段应当被截断。</li>
+</ul>
+</li>
+<li>将处理后的数据先写入到<strong>等待写入的数据片段</strong>中，如果处理后的数据与<strong>等待写入的数据片段</strong>有交集，那么我们可以合并有交集的数据片段。</li>
+<li>取出<strong>等待写入的数据片段</strong>的第一个数据片段，如果该数据片段的 index &lt; first unassembled，那么就可以写入到 ByteStream 中，同时将该片段从<strong>等待写入的数据片段</strong>中移出。</li>
+</ul>
+<p>实现代码如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">//! \details This function accepts a substring (aka a segment) of bytes,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//! possibly out-of-order, from the logical stream, and assembles any newly
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//! contiguous substrings and writes them into the output stream in order.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> StreamReassembler<span style="color:#f92672">::</span>push_substring(<span style="color:#66d9ef">const</span> string <span style="color:#f92672">&amp;</span>data, <span style="color:#66d9ef">const</span> size_t index, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">bool</span> eof) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// before start, update field
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (data.empty()) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (eof) {
+</span></span><span style="display:flex;"><span>          _output.end_input();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Segment segment{data, index, index <span style="color:#f92672">+</span> data.size() <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, eof};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (segment._start <span style="color:#f92672">&gt;=</span> first_unacceptable_index()) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (segment._end <span style="color:#f92672">&lt;</span> first_unassemebled_index()) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// have been written
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (segment._end <span style="color:#f92672">&gt;=</span> first_unacceptable_index()) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// truncate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        size_t len <span style="color:#f92672">=</span> first_unacceptable_index() <span style="color:#f92672">-</span> segment._start;
+</span></span><span style="display:flex;"><span>        segment._data <span style="color:#f92672">=</span> string(segment._data.begin(), segment._data.begin() <span style="color:#f92672">+</span> len);
+</span></span><span style="display:flex;"><span>        segment._end <span style="color:#f92672">=</span> first_unacceptable_index() <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>        segment._eof <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _waiting_segments.emplace_back(segment);
+</span></span><span style="display:flex;"><span>    merge_waiting_segments();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> iter <span style="color:#f92672">=</span> _waiting_segments.begin();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (iter<span style="color:#f92672">-&gt;</span>_start <span style="color:#f92672">&lt;=</span> first_unassemebled_index()) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// insert waiting segment
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        write_to_output(<span style="color:#f92672">*</span>iter);
+</span></span><span style="display:flex;"><span>        _waiting_segments.erase(iter);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这里定义了 <strong>Segment</strong> 作为带索引的数据段：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">Segment</span> {
+</span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>string _data;
+</span></span><span style="display:flex;"><span>    size_t _start;
+</span></span><span style="display:flex;"><span>    size_t _end;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> _eof;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Segment(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>data, <span style="color:#66d9ef">const</span> size_t <span style="color:#f92672">&amp;</span>start, <span style="color:#66d9ef">const</span> size_t <span style="color:#f92672">&amp;</span>end, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">bool</span> <span style="color:#f92672">&amp;</span>eof)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">:</span> _data(data), _start(start), _end(end), _eof(eof) {}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> <span style="color:#66d9ef">operator</span><span style="color:#f92672">&lt;</span>(<span style="color:#66d9ef">const</span> Segment <span style="color:#f92672">&amp;</span>rhs) <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">-&gt;</span>_start <span style="color:#f92672">&lt;</span> rhs._start; }
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p><strong>等待写入的数据片段</strong>(_waiting_segments)的定义是 <code>std::vector&lt;Segment&gt;</code>，<strong>等待写入的数据片段</strong>的合并是一个数据结构与算法的问题，参考 <a href="https://leetcode-cn.com/problems/merge-intervals/">leetcode 56: 区间合并</a>，<code>merge_waiting_segments()</code>实现如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c++" data-lang="c++"><span style="display:flex;"><span><span style="color:#75715e">// added method
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// leetcode solution: https://leetcode-cn.com/problems/merge-intervals/
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> StreamReassembler<span style="color:#f92672">::</span>merge_waiting_segments() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_waiting_segments.size() <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    vector<span style="color:#f92672">&lt;</span>Segment<span style="color:#f92672">&gt;</span> new_waiting_segments{};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sort(_waiting_segments.begin(), _waiting_segments.end());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    new_waiting_segments.emplace_back(_waiting_segments[<span style="color:#ae81ff">0</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (size_t i <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; i <span style="color:#f92672">&lt;</span> _waiting_segments.size(); i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        Segment <span style="color:#f92672">&amp;</span>new_waiting_segments_back <span style="color:#f92672">=</span> new_waiting_segments.back();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ((new_waiting_segments_back._end <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&gt;=</span> _waiting_segments[i]._start) <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>            (new_waiting_segments_back._end <span style="color:#f92672">&lt;=</span> _waiting_segments[i]._end)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// merge and update data
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            new_waiting_segments_back._data <span style="color:#f92672">+=</span> string(
+</span></span><span style="display:flex;"><span>                _waiting_segments[i]._data.begin() <span style="color:#f92672">+</span> new_waiting_segments_back._end <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> _waiting_segments[i]._start,
+</span></span><span style="display:flex;"><span>                _waiting_segments[i]._data.end());
+</span></span><span style="display:flex;"><span>            new_waiting_segments_back._end <span style="color:#f92672">=</span> _waiting_segments[i]._end;
+</span></span><span style="display:flex;"><span>            new_waiting_segments_back._eof <span style="color:#f92672">=</span> _waiting_segments[i]._eof;
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> <span style="color:#a6e22e">if</span> (new_waiting_segments_back._end <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;</span> _waiting_segments[i]._start) {
+</span></span><span style="display:flex;"><span>            new_waiting_segments.emplace_back(_waiting_segments[i]);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _waiting_segments.clear();
+</span></span><span style="display:flex;"><span>    _waiting_segments.assign(new_waiting_segments.begin(), new_waiting_segments.end());
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>StreamReassembler</strong> 核心部分实现完毕。</p>
+
+		</section>
+
+		<div class="post-tags">
+			
+			
+			<nav class="nav tags">
+				<ul class="tags">
+					
+					<li><a href="/tags/computer-networking">Computer Networking</a></li>
+					
+				</ul>
+			</nav>
+			
+			
+		</div>
+	</article>
+</main>
+<footer>
+<hr>
+
+<a class="soc" href="https://github.com/zonepg" title="GitHub"><i data-feather="github"></i></a>|<a class="soc" href="https://zonepg.github.io/posts/index.xml" title="RSS"><i data-feather="rss"></i></a>|⚡️
+	2023  @ ZonePG |  <a href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+</footer>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0RR9DVCNMR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0RR9DVCNMR');
+</script>
+<script>
+      feather.replace()
+</script></div>
+    </body>
+</html>
